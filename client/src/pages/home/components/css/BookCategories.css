@@ -1,0 +1,16 @@
+.group {
+    perspective: 1000px;
+}
+
+.group:hover {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes floatIcon {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+.group:hover .w-16 {
+    animation: floatIcon 3s ease-in-out infinite;
+}
