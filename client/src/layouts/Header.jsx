@@ -1,0 +1,149 @@
+import React, { useState, useEffect, useRef } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { 
+    faSearch, faShoppingCart, faUser, faPhone, 
+    faBars, faBookOpen, faChartLine, faChild, faGlobe, 
+    faFeather, faBrain, faLightbulb, faEllipsisH, faTimes 
+} from "@fortawesome/free-solid-svg-icons";
+import './css/Header.css';
+
+const CATEGORIES = [
+    { id: 1, name: "Sách Văn Học", icon: faBookOpen, desc: "Tiểu thuyết, Tản văn" },
+    { id: 2, name: "Kinh Tế - Làm Giàu", icon: faChartLine, desc: "Bài học kinh doanh" },
+    { id: 3, name: "Thiếu Nhi", icon: faChild, desc: "Truyện tranh, Giáo dục" },
+    { id: 4, name: "Ngoại Ngữ", icon: faGlobe, desc: "Tiếng Anh, Nhật, Trung" },
+    { id: 5, name: "Tiểu Sử - Hồi Ký", icon: faFeather, desc: "Danh nhân thế giới" },
+    { id: 6, name: "Tâm Lý - Kỹ Năng", icon: faBrain, desc: "Phát triển bản thân" },
+    { id: 7, name: "Cẩm Nang Đời Sống", icon: faLightbulb, desc: "Mẹo hay, Nấu ăn" },
+    { id: 8, name: "Thể Loại Khác", icon: faEllipsisH, desc: "Tạp chí, Lịch sử" },
+];
+
+function Header() {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const menuRef = useRef(null);
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setIsMenuOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [menuRef]);
+
+    return (
+        <header className="header-wrapper w-full hidden md:block relative">
+            <div className="container mx-auto px-4 py-2 flex justify-between items-center text-sm border-b border-black/5">
+                <div className="text-gray-500 font-body">
+                    <FontAwesomeIcon icon={faPhone} className="mr-2 text-brand-primary" />
+                    Hotline: <span className="font-semibold text-brand-primary">1900 6789</span>
+                </div>
+                <div className="flex gap-6 text-gray-500 font-body text-xs uppercase tracking-wider">
+                    <span className="cursor-pointer hover:text-brand-primary transition-colors">Hỗ trợ</span>
+                    <span className="cursor-pointer hover:text-brand-primary transition-colors">Tra cứu đơn</span>
+                </div>
+            </div>
+
+            <div className="container mx-auto px-4 py-5 flex justify-between items-center gap-8">
+                <div className="logo-text text-3xl cursor-pointer tracking-tighter shrink-0">
+                    LUMI BOOK
+                </div>
+
+                <div className="flex-1 max-w-2xl relative flex group">
+                    <input 
+                        type="text" 
+                        placeholder="Tìm kiếm sách, tác giả, thể loại..." 
+                        className="search-input w-full py-3 px-5 rounded-l-xl text-sm font-body shadow-sm"
+                    />
+                    <button className="btn-search px-8 rounded-r-xl transition-all duration-300 shadow-sm">
+                        <FontAwesomeIcon icon={faSearch} />
+                    </button>
+                </div>
+
+                <div className="flex items-center gap-6 shrink-0">
+                    <div className="flex items-center gap-3 cursor-pointer group">
+                        <div className="w-10 h-10 rounded-full bg-surface border border-brand-light/30 flex items-center justify-center text-brand-primary group-hover:bg-brand-primary group-hover:text-white transition-all shadow-sm">
+                            <FontAwesomeIcon icon={faUser} />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-[11px] text-text-muted uppercase font-bold tracking-wide">Tài khoản</span>
+                            <span className="text-sm font-bold text-text-primary group-hover:text-brand-primary transition-colors">Đăng nhập</span>
+                        </div>
+                    </div>
+                    
+                    <div className="w-[1px] h-8 bg-gray-300/50"></div>
+
+                    <div className="relative cursor-pointer group">
+                        <div className="w-10 h-10 flex items-center justify-center text-text-primary group-hover:text-brand-primary transition-colors">
+                            <FontAwesomeIcon icon={faShoppingCart} className="text-2xl" />
+                        </div>
+                        <span className="cart-badge absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-md animate-bounce-short">
+                            0
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="border-t border-b border-brand-primary/10 bg-white shadow-sm relative z-40">
+                <div className="container mx-auto px-4 relative">
+                    <div className="flex items-center justify-between h-14">
+                        
+                        <div ref={menuRef} className="relative h-full flex items-center">
+                            <button 
+                                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                className={`
+                                    flex items-center gap-3 px-6 h-full font-heading font-bold uppercase tracking-wide text-sm transition-all duration-300
+                                    ${isMenuOpen ? 'bg-brand-primary text-white' : 'bg-transparent text-text-primary hover:text-brand-primary'}
+                                `}
+                            >
+                                <FontAwesomeIcon icon={isMenuOpen ? faTimes : faBars} className="text-lg" />
+                                <span>Danh Mục Sản Phẩm</span>
+                            </button>
+
+                            {isMenuOpen && (
+                                <div className="absolute top-full left-0 w-[900px] bg-white shadow-2xl rounded-b-xl border-t-2 border-brand-primary animate-fade-in-down overflow-hidden">
+                                    <div className="grid grid-cols-4 gap-4 p-6 bg-background/30">
+                                        {CATEGORIES.map((cat) => (
+                                            <div 
+                                                key={cat.id} 
+                                                className="group/item flex items-start gap-4 p-4 bg-white rounded-lg border border-transparent hover:border-brand-light/50 hover:shadow-hover cursor-pointer transition-all duration-300"
+                                            >
+                                                <div className="w-10 h-10 rounded-full bg-brand-light/10 text-brand-primary flex items-center justify-center group-hover/item:bg-brand-primary group-hover/item:text-white transition-colors duration-300">
+                                                    <FontAwesomeIcon icon={cat.icon} />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-text-primary text-sm group-hover/item:text-brand-primary transition-colors">
+                                                        {cat.name}
+                                                    </h3>
+                                                    <p className="text-xs text-text-muted mt-1 font-body line-clamp-1">
+                                                        {cat.desc}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {/* Footer của Menu */}
+                                    <div className="bg-brand-primary/5 p-3 text-center text-xs text-text-secondary font-bold uppercase tracking-widest border-t border-brand-primary/10 hover:bg-brand-primary/10 cursor-pointer transition-colors">
+                                        Xem tất cả thể loại
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <ul className="flex gap-8 text-sm font-bold uppercase tracking-wide font-heading text-text-secondary">
+                            <li className="cursor-pointer hover:text-brand-primary transition-colors">Trang chủ</li>
+                            <li className="cursor-pointer hover:text-brand-primary transition-colors flex items-center gap-1">
+                                <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse"></span>
+                                Sách Mới
+                            </li>
+                            <li className="cursor-pointer text-accent-primary hover:text-accent-hover transition-colors">Khuyến Mãi</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </header>
+    );
+}
+
+export default Header;
