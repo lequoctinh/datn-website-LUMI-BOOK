@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { 
     faSearch, faShoppingCart, faUser, faPhone, 
@@ -46,9 +47,9 @@ function Header() {
             </div>
 
             <div className="container mx-auto px-4 py-5 flex justify-between items-center gap-8">
-                <div className="logo-text text-3xl cursor-pointer tracking-tighter shrink-0">
+                <Link to="/" className="logo-text text-3xl cursor-pointer tracking-tighter shrink-0 decoration-transparent text-current">
                     LUMI BOOK
-                </div>
+                </Link>
 
                 <div className="flex-1 max-w-2xl relative flex group">
                     <input 
@@ -62,7 +63,7 @@ function Header() {
                 </div>
 
                 <div className="flex items-center gap-6 shrink-0">
-                    <div className="flex items-center gap-3 cursor-pointer group">
+                    <Link to="/login" className="flex items-center gap-3 cursor-pointer group decoration-transparent">
                         <div className="w-10 h-10 rounded-full bg-surface border border-brand-light/30 flex items-center justify-center text-brand-primary group-hover:bg-brand-primary group-hover:text-white transition-all shadow-sm">
                             <FontAwesomeIcon icon={faUser} />
                         </div>
@@ -70,7 +71,7 @@ function Header() {
                             <span className="text-[11px] text-text-muted uppercase font-bold tracking-wide">Tài khoản</span>
                             <span className="text-sm font-bold text-text-primary group-hover:text-brand-primary transition-colors">Đăng nhập</span>
                         </div>
-                    </div>
+                    </Link>
                     
                     <div className="w-[1px] h-8 bg-gray-300/50"></div>
 
@@ -123,7 +124,6 @@ function Header() {
                                             </div>
                                         ))}
                                     </div>
-                                    {/* Footer của Menu */}
                                     <div className="bg-brand-primary/5 p-3 text-center text-xs text-text-secondary font-bold uppercase tracking-widest border-t border-brand-primary/10 hover:bg-brand-primary/10 cursor-pointer transition-colors">
                                         Xem tất cả thể loại
                                     </div>
@@ -132,7 +132,9 @@ function Header() {
                         </div>
 
                         <ul className="flex gap-8 text-sm font-bold uppercase tracking-wide font-heading text-text-secondary">
-                            <li className="cursor-pointer hover:text-brand-primary transition-colors">Trang chủ</li>
+                            <li>
+                                <Link to="/" className="cursor-pointer hover:text-brand-primary transition-colors">Trang chủ</Link>
+                            </li>
                             <li className="cursor-pointer hover:text-brand-primary transition-colors flex items-center gap-1">
                                 <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse"></span>
                                 Sách Mới
