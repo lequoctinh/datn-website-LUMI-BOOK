@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faEnvelope, faPhone, faLock, faArrowRight, faSpinner } from '@fortawesome/free-solid-svg-icons';
-import { toast } from 'react-toastify';     
+import { faUser, faEnvelope, faPhone, faLock, faArrowRight, faSpinner, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { toast } from 'react-toastify';
 import authService from '../../services/authService';
 
 const Register = () => {
@@ -14,6 +14,8 @@ const Register = () => {
         confirm_password: ''
     });
     
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
@@ -129,14 +131,21 @@ const Register = () => {
                                 <FontAwesomeIcon icon={faLock} />
                             </div>
                             <input 
-                                type="password" 
+                                type={showPassword ? "text" : "password"}
                                 name="mat_khau"
                                 placeholder="Mật khẩu" 
                                 value={formData.mat_khau}
                                 onChange={handleChange}
                                 required
-                                className="w-full py-3.5 pl-12 pr-4 bg-background/50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-brand-primary/50 focus:shadow-md transition-all duration-300 font-body text-text-primary" 
+                                className="w-full py-3.5 pl-12 pr-10 bg-background/50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-brand-primary/50 focus:shadow-md transition-all duration-300 font-body text-text-primary" 
                             />
+                            <button 
+                                type="button" 
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute top-1/2 -translate-y-1/2 right-4 text-gray-400 hover:text-gray-600 focus:outline-none"
+                            >
+                                <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                            </button>
                         </div>
 
                         <div className="group relative">
@@ -144,14 +153,21 @@ const Register = () => {
                                 <FontAwesomeIcon icon={faLock} />
                             </div>
                             <input 
-                                type="password" 
+                                type={showConfirmPassword ? "text" : "password"}
                                 name="confirm_password"
                                 placeholder="Nhập lại mật khẩu" 
                                 value={formData.confirm_password}
                                 onChange={handleChange}
                                 required
-                                className="w-full py-3.5 pl-12 pr-4 bg-background/50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-brand-primary/50 focus:shadow-md transition-all duration-300 font-body text-text-primary" 
+                                className="w-full py-3.5 pl-12 pr-10 bg-background/50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-brand-primary/50 focus:shadow-md transition-all duration-300 font-body text-text-primary" 
                             />
+                            <button 
+                                type="button" 
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute top-1/2 -translate-y-1/2 right-4 text-gray-400 hover:text-gray-600 focus:outline-none"
+                            >
+                                <FontAwesomeIcon icon={showConfirmPassword ? faEyeSlash : faEye} />
+                            </button>
                         </div>
 
                         <div className="flex items-start gap-2 mt-2">

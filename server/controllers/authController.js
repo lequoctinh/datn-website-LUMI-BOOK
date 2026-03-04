@@ -232,3 +232,60 @@ exports.getMe = async (req, res) => {
         res.status(500).json({ message: 'Lỗi server' });
     }
 };
+// 6. CẬP NHẬT THÔNG TIN CÁ NHÂN (Tên, SĐT, Avatar)
+exports.updateProfile = async (req, res) => {
+    const { ho_ten, so_dien_thoai, avatar_url } = req.body;
+    const userId = req.user.id; 
+
+    try {
+        await pool.execute(
+            `UPDATE nguoi_dung 
+            SET ho_ten = COALESCE(?, ho_ten), 
+                so_dien_thoai = COALESCE(?, so_dien_thoai),
+                avatar_url = COALESCE(?, avatar_url)
+            WHERE id = ?`,
+            [ho_ten, so_dien_thoai, avatar_url, userId]
+        );
+        const [rows] = await pool.execute(
+            'SELECT id, ho_ten, email, role, avatar_url, so_dien_thoai FROM nguoi_dung WHERE id = ?',
+            [userId]
+        );
+        res.json({
+            success: true,
+            message: 'Cập nhật thông tin thành công!',
+            user: rows[0]
+        });
+    } catch (error) {
+        console.error("Lỗi cập nhật profile:", error);
+        res.status(500).json({ message: 'Lỗi server khi cập nhật thông tin.' });
+    }
+};
+
+// 7. ĐỔI MẬT KHẨU
+exports.changePassword = async (req, res) => {
+    const { mat_khau_cu, mat_khau_moi } = req.body;
+    const userId = req.user.id;
+
+    if (!mat_khau_cu || !mat_khau_moi) {
+        return res.status(400).json({ message: 'Vui lòng nhập mật khẩu cũ và mới!' });
+    }
+
+    try {
+        const [rows] = await pool.execute('SELECT mat_khau FROM nguoi_dung WHERE id = ?', [userId]);
+        const user = rows[0];
+        if (!user.mat_khau) {
+            return res.status(400).json({ message: 'Tài khoản đăng nhập bằng Google không thể đổi mật khẩu tại đây.' });
+        }
+        const isMatch = await bcrypt.compare(mat_khau_cu, user.mat_khau);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Mật khẩu cũ không chính xác!' });
+        }
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(mat_khau_moi, salt);
+        await pool.execute('UPDATE nguoi_dung SET mat_khau = ? WHERE id = ?', [hashedPassword, userId]);
+        res.json({ success: true, message: 'Đổi mật khẩu thành công!' });
+    } catch (error) {
+        console.error("Lỗi đổi mật khẩu:", error);
+        res.status(500).json({ message: 'Lỗi server.' });
+    }
+};
