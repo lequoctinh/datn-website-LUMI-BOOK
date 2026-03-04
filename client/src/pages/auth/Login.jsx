@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEnvelope, faLock, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faEnvelope, faLock, faArrowLeft, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from "jwt-decode";
 import { toast } from 'react-toastify';
@@ -9,6 +9,7 @@ import authService from '../../services/authService';
 
 const Login = () => {
     const [formData, setFormData] = useState({ email: '', mat_khau: '' });
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -104,14 +105,21 @@ const Login = () => {
                                     <FontAwesomeIcon icon={faLock} />
                                 </div>
                                 <input 
-                                    type="password" 
+                                    type={showPassword ? "text" : "password"}
                                     name="mat_khau"
                                     placeholder="Mật khẩu" 
                                     value={formData.mat_khau}
                                     onChange={handleChange}
                                     required
-                                    className="w-full py-3.5 pl-12 pr-4 bg-background/50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-brand-primary/50 transition-all text-text-primary"
+                                    className="w-full py-3.5 pl-12 pr-10 bg-background/50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-brand-primary/50 transition-all text-text-primary"
                                 />
+                                <button 
+                                    type="button" 
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute top-1/2 -translate-y-1/2 right-4 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                >
+                                    <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                                </button>
                             </div>
                         </div>
 
@@ -150,7 +158,7 @@ const Login = () => {
 
                     <div className="mt-8 text-center text-sm font-medium text-text-secondary">
                         Bạn chưa có tài khoản? 
-                        <Link to="/register" className="text-brand-primary font-bold ml-1 hover:underline">
+                        <Link to="/register" className="text-brand-primary font-bold ml-1 hover:underline decoration-2 underline-offset-4">
                             Đăng ký ngay
                         </Link>
                     </div>

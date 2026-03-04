@@ -19,6 +19,28 @@ const authService = {
     // Lấy thông tin user hiện tại
     getMe: () => {
         return axiosClient.get('/auth/me');
+    },
+    updateProfile(data) {
+        return axiosClient.put('/auth/update-profile', data);
+    },
+    changePassword(data) {
+        return axiosClient.put('/auth/change-password', data);
+    },
+    // Upload file ảnh
+    uploadAvatar(formData) {
+        return axiosClient.post('/auth/upload-avatar', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+    },
+    // Địa chỉ
+    getAddresses() {
+        return axiosClient.get('/auth/addresses');
+    },
+    addAddress(data) {
+        return axiosClient.post('/auth/addresses', data);
+    },
+    deleteAddress(id) {
+        return axiosClient.delete(`/auth/addresses/${id}`);
     }
 };
 

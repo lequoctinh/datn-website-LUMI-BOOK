@@ -1,11 +1,14 @@
 import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { 
     faBars, faShoppingCart, faSearch, faTimes, 
     faUser, faBookOpen, faChartLine, faChild, 
     faGlobe, faFeather, faBrain, faLightbulb, 
-    faEllipsisH, faPhone, faChevronRight 
+    faEllipsisH, faPhone, faChevronRight,
+    faSignOutAlt 
 } from "@fortawesome/free-solid-svg-icons";
+import { useUser } from "../context/UserContext";
 import './css/HeaderMobile.css';
 
 const MOBILE_CATEGORIES = [
@@ -22,9 +25,17 @@ const MOBILE_CATEGORIES = [
 function HeaderMobile() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+    
+    const { user, logout } = useUser();
+    const navigate = useNavigate();
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
     const toggleSearch = () => setIsSearchOpen(!isSearchOpen);
+
+    const handleLogout = () => {
+        logout(); 
+        setIsMenuOpen(false); 
+    };
 
     return (
         <>
@@ -36,9 +47,9 @@ function HeaderMobile() {
                     >
                         <FontAwesomeIcon icon={faBars} />
                     </button>
-                    <div className="logo-text text-xl font-heading font-black tracking-tighter text-brand-primary">
+                    <Link to="/" className="logo-text text-xl font-heading font-black tracking-tighter text-brand-primary decoration-transparent">
                         LUMI BOOK
-                    </div>
+                    </Link>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -84,20 +95,34 @@ function HeaderMobile() {
                     <div className="relative w-[85%] max-w-[320px] h-full bg-white shadow-2xl animate-slide-in flex flex-col">
                         <div className="p-5 bg-brand-primary text-white flex flex-col gap-3">
                             <div className="flex justify-between items-start">
-                                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-xl border-2 border-white/30">
-                                    <FontAwesomeIcon icon={faUser} />
+                                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-xl border-2 border-white/30 overflow-hidden">
+                                    {user && user.avatar_url ? (
+                                        <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <FontAwesomeIcon icon={faUser} />
+                                    )}
                                 </div>
                                 <button onClick={toggleMenu} className="text-white/80 hover:text-white">
                                     <FontAwesomeIcon icon={faTimes} className="text-xl" />
                                 </button>
                             </div>
+                            
                             <div>
-                                <h3 className="font-heading font-bold text-lg">Xin chào, Bạn đọc</h3>
-                                <div className="flex gap-3 text-xs mt-1 font-body">
-                                    <span className="underline cursor-pointer hover:text-brand-light">Đăng nhập</span>
-                                    <span>|</span>
-                                    <span className="underline cursor-pointer hover:text-brand-light">Đăng ký</span>
-                                </div>
+                                {user ? (
+                                    <>
+                                        <h3 className="font-heading font-bold text-lg truncate">Xin chào, {user.ho_ten}</h3>
+                                        <p className="text-xs text-white/80 truncate">{user.email}</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <h3 className="font-heading font-bold text-lg">Xin chào, Bạn đọc</h3>
+                                        <div className="flex gap-3 text-xs mt-1 font-body">
+                                            <Link to="/login" onClick={toggleMenu} className="underline cursor-pointer hover:text-brand-light decoration-transparent text-white">Đăng nhập</Link>
+                                            <span>|</span>
+                                            <Link to="/register" onClick={toggleMenu} className="underline cursor-pointer hover:text-brand-light decoration-transparent text-white">Đăng ký</Link>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -117,6 +142,33 @@ function HeaderMobile() {
                                     <FontAwesomeIcon icon={faChevronRight} className="text-xs text-gray-300" />
                                 </div>
                             ))}
+
+                            {user && (
+                                <>
+                                    <div className="px-4 py-2 mt-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                        Tài khoản
+                                    </div>
+                                    <Link 
+                                        to="/profile" 
+                                        onClick={toggleMenu}
+                                        className="flex items-center gap-4 px-5 py-3.5 border-b border-gray-50 hover:bg-brand-primary/5 cursor-pointer text-text-primary block decoration-transparent"
+                                    >
+                                        <FontAwesomeIcon icon={faUser} className="w-5 text-gray-400" />
+                                        <span className="font-medium text-sm">Thông tin cá nhân</span>
+                                    </Link>
+                                    <div className="flex items-center gap-4 px-5 py-3.5 border-b border-gray-50 hover:bg-brand-primary/5 cursor-pointer text-text-primary">
+                                        <FontAwesomeIcon icon={faShoppingCart} className="w-5 text-gray-400" />
+                                        <span className="font-medium text-sm">Đơn hàng của tôi</span>
+                                    </div>
+                                    <div 
+                                        onClick={handleLogout}
+                                        className="flex items-center gap-4 px-5 py-3.5 hover:bg-red-50 cursor-pointer text-red-600 mt-2"
+                                    >
+                                        <FontAwesomeIcon icon={faSignOutAlt} className="w-5" />
+                                        <span className="font-medium text-sm">Đăng xuất</span>
+                                    </div>
+                                </>
+                            )}
                         </div>
 
                         <div className="p-4 bg-gray-50 border-t border-gray-100 mt-auto">
