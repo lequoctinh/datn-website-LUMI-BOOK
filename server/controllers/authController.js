@@ -1,15 +1,16 @@
 const { pool } = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const sendVerificationEmail = require('../utils/sendMail'); // Đảm bảo bạn đã tạo file này như hướng dẫn trước
 
-// Helper: Tạo Token JWT
+// Helper: Tạo Token JWT đăng nhập
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRE,
+        expiresIn: process.env.JWT_EXPIRE || '30d',
     });
 };
 
-// 1. ĐĂNG KÝ TÀI KHOẢN THƯỜNG
+// 1. ĐĂNG KÝ TÀI KHOẢN 
 exports.register = async (req, res) => {
     const { ho_ten, email, mat_khau, so_dien_thoai } = req.body;
 
@@ -30,26 +31,25 @@ exports.register = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(mat_khau, salt);
 
+        const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
         const [result] = await pool.execute(
             `INSERT INTO nguoi_dung 
             (ho_ten, email, mat_khau, so_dien_thoai, role, trang_thai) 
             VALUES (?, ?, ?, ?, ?, ?)`,
-            [ho_ten, email, hashedPassword, so_dien_thoai || null, 'customer', 'active']
+            [ho_ten, email, hashedPassword, so_dien_thoai || null, 'customer', 'pending'] 
         );
 
-        const token = generateToken(result.insertId);
+        try {
+            await sendVerificationEmail(email, verificationToken);
+        } catch (mailError) {
+            console.error("Lỗi gửi mail:", mailError);
+            return res.status(500).json({ message: 'Đăng ký thành công nhưng lỗi gửi mail xác thực. Vui lòng liên hệ hỗ trợ.' });
+        }
 
         res.status(201).json({
             success: true,
-            token,
-            user: { 
-                id: result.insertId, 
-                ho_ten, 
-                email, 
-                role: 'customer',
-                avatar_url: null 
-            },
-            message: 'Đăng ký thành công!'
+            message: 'Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.'
         });
 
     } catch (error) {
@@ -58,7 +58,39 @@ exports.register = async (req, res) => {
     }
 };
 
-// 2. ĐĂNG NHẬP TÀI KHOẢN THƯỜNG
+// 2. XÁC THỰC EMAIL
+exports.verifyEmail = async (req, res) => {
+    const { token } = req.body;
+
+    if (!token) {
+        return res.status(400).json({ message: 'Thiếu token xác thực!' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const email = decoded.email;
+
+        const [result] = await pool.execute(
+            `UPDATE nguoi_dung SET trang_thai = 'active' WHERE email = ?`,
+            [email]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Không tìm thấy người dùng hoặc tài khoản lỗi.' });
+        }
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Xác thực thành công! Bạn có thể đăng nhập ngay.' 
+        });
+
+    } catch (error) {
+        console.error("Lỗi xác thực:", error);
+        return res.status(400).json({ message: 'Link xác thực không hợp lệ hoặc đã hết hạn!' });
+    }
+};
+
+// 3. ĐĂNG NHẬP (Thêm kiểm tra trạng thái 'pending')
 exports.login = async (req, res) => {
     const { email, mat_khau } = req.body;
 
@@ -77,7 +109,6 @@ exports.login = async (req, res) => {
         }
 
         const user = rows[0];
-
         if (!user.mat_khau) {
             return res.status(400).json({ message: 'Tài khoản này đăng nhập bằng Google, vui lòng chọn đăng nhập Google!' });
         }
@@ -85,6 +116,9 @@ exports.login = async (req, res) => {
         const isMatch = await bcrypt.compare(mat_khau, user.mat_khau);
         if (!isMatch) {
             return res.status(401).json({ message: 'Email hoặc mật khẩu không đúng!' });
+        }
+        if (user.trang_thai === 'pending') {
+            return res.status(403).json({ message: 'Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email!' });
         }
 
         if (user.trang_thai === 'locked') {
@@ -113,7 +147,7 @@ exports.login = async (req, res) => {
     }
 };
 
-// 3. ĐĂNG NHẬP BẰNG GOOGLE
+// 4. ĐĂNG NHẬP BẰNG GOOGLE (Luôn 'active')
 exports.googleLogin = async (req, res) => {
     const { email, ho_ten, google_sub, avatar_url } = req.body;
 
@@ -133,11 +167,13 @@ exports.googleLogin = async (req, res) => {
                 return res.status(403).json({ message: 'Tài khoản của bạn đã bị khóa!' });
             }
 
+            let newStatus = user.trang_thai === 'pending' ? 'active' : user.trang_thai;
+
             await pool.execute(
                 `UPDATE nguoi_dung 
-                SET google_sub = ?, google_avatar_url = ?, avatar_url = COALESCE(avatar_url, ?) 
+                SET google_sub = ?, google_avatar_url = ?, avatar_url = COALESCE(avatar_url, ?), trang_thai = ?
                 WHERE id = ?`, 
-                [google_sub, avatar_url, avatar_url, userId]
+                [google_sub, avatar_url, avatar_url, newStatus, userId]
             );
         } else {
             const [result] = await pool.execute(
@@ -171,6 +207,7 @@ exports.googleLogin = async (req, res) => {
     }
 };
 
+// 5. LẤY THÔNG TIN USER (ME)
 exports.getMe = async (req, res) => {
     try {
         const [rows] = await pool.execute(

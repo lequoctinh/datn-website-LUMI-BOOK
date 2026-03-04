@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { 
     faSearch, faShoppingCart, faUser, faPhone, 
     faBars, faBookOpen, faChartLine, faChild, faGlobe, 
-    faFeather, faBrain, faLightbulb, faEllipsisH, faTimes 
+    faFeather, faBrain, faLightbulb, faEllipsisH, faTimes,
+    faSignOutAlt 
 } from "@fortawesome/free-solid-svg-icons";
+import authService from "../services/authService";
 import './css/Header.css';
 
 const CATEGORIES = [
@@ -21,9 +23,26 @@ const CATEGORIES = [
 
 function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [user, setUser] = useState(null);
     const menuRef = useRef(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
+        const fetchUser = async () => {
+            const token = localStorage.getItem('lumi_token');
+            if (token) {
+                try {
+                    const res = await authService.getMe();
+                    if (res.success) {
+                        setUser(res.user);
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+        };
+        fetchUser();
+
         function handleClickOutside(event) {
             if (menuRef.current && !menuRef.current.contains(event.target)) {
                 setIsMenuOpen(false);
@@ -32,6 +51,12 @@ function Header() {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [menuRef]);
+
+    const handleLogout = () => {
+        localStorage.removeItem('lumi_token');
+        setUser(null);
+        navigate('/login');
+    };
 
     return (
         <header className="header-wrapper w-full hidden md:block relative">
@@ -63,15 +88,57 @@ function Header() {
                 </div>
 
                 <div className="flex items-center gap-6 shrink-0">
-                    <Link to="/login" className="flex items-center gap-3 cursor-pointer group decoration-transparent">
-                        <div className="w-10 h-10 rounded-full bg-surface border border-brand-light/30 flex items-center justify-center text-brand-primary group-hover:bg-brand-primary group-hover:text-white transition-all shadow-sm">
-                            <FontAwesomeIcon icon={faUser} />
+                    
+                    {user ? (
+                        <div className="flex items-center gap-3 cursor-pointer group relative z-50">
+                            <div className="w-10 h-10 rounded-full border border-brand-light/30 flex items-center justify-center overflow-hidden bg-surface">
+                                {user.avatar ? (
+                                    <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full bg-brand-primary text-white flex items-center justify-center font-bold text-lg">
+                                        {user.ho_ten ? user.ho_ten.charAt(0).toUpperCase() : 'U'}
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="flex flex-col">
+                                <span className="text-[11px] text-text-muted uppercase font-bold tracking-wide">Xin chào</span>
+                                <span className="text-sm font-bold text-text-primary max-w-[100px] truncate">{user.ho_ten}</span>
+                            </div>
+
+                            <div className="user-dropdown absolute top-full right-0 mt-0 w-56 bg-white rounded-xl py-2 hidden group-hover:block animate-fade-in-down">
+                                <div className="px-4 py-3 border-b border-gray-100 mb-1">
+                                    <p className="text-sm font-bold text-text-primary truncate">{user.ho_ten}</p>
+                                    <p className="text-xs text-text-muted truncate">{user.email}</p>
+                                </div>
+                                
+                                <div className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700 font-medium flex items-center gap-2">
+                                    <FontAwesomeIcon icon={faUser} className="text-gray-400 w-4" /> Thông tin cá nhân
+                                </div>
+                                <div className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700 font-medium flex items-center gap-2">
+                                    <FontAwesomeIcon icon={faShoppingCart} className="text-gray-400 w-4" /> Đơn hàng của tôi
+                                </div>
+                                
+                                <div className="border-t border-gray-100 my-1"></div>
+                                <div 
+                                    onClick={handleLogout} 
+                                    className="px-4 py-2 hover:bg-red-50 cursor-pointer text-sm text-red-600 font-bold flex items-center gap-2"
+                                >
+                                    <FontAwesomeIcon icon={faSignOutAlt} className="w-4" /> Đăng xuất
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex flex-col">
-                            <span className="text-[11px] text-text-muted uppercase font-bold tracking-wide">Tài khoản</span>
-                            <span className="text-sm font-bold text-text-primary group-hover:text-brand-primary transition-colors">Đăng nhập</span>
-                        </div>
-                    </Link>
+                    ) : (
+                        <Link to="/login" className="flex items-center gap-3 cursor-pointer group decoration-transparent">
+                            <div className="w-10 h-10 rounded-full bg-surface border border-brand-light/30 flex items-center justify-center text-brand-primary group-hover:bg-brand-primary group-hover:text-white transition-all shadow-sm">
+                                <FontAwesomeIcon icon={faUser} />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[11px] text-text-muted uppercase font-bold tracking-wide">Tài khoản</span>
+                                <span className="text-sm font-bold text-text-primary group-hover:text-brand-primary transition-colors">Đăng nhập</span>
+                            </div>
+                        </Link>
+                    )}
                     
                     <div className="w-[1px] h-8 bg-gray-300/50"></div>
 
@@ -103,7 +170,7 @@ function Header() {
                             </button>
 
                             {isMenuOpen && (
-                                <div className="absolute top-full left-0 w-[900px] bg-white shadow-2xl rounded-b-xl border-t-2 border-brand-primary animate-fade-in-down overflow-hidden">
+                                <div className="absolute top-full left-0 w-[900px] bg-white shadow-2xl rounded-b-xl border-t-2 border-brand-primary animate-fade-in-down overflow-hidden z-[1002]">
                                     <div className="grid grid-cols-4 gap-4 p-6 bg-background/30">
                                         {CATEGORIES.map((cat) => (
                                             <div 

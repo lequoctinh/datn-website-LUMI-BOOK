@@ -1,10 +1,61 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope, faLock, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { faGoogle } from '@fortawesome/free-brands-svg-icons';
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from "jwt-decode";
+import { toast } from 'react-toastify';
+import authService from '../../services/authService';
 
 const Login = () => {
+    const [formData, setFormData] = useState({ email: '', mat_khau: '' });
+    const navigate = useNavigate();
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleLoginSuccess = (token, message) => {
+        localStorage.setItem('lumi_token', token);
+        toast.success(message);
+        
+        setTimeout(() => {
+            navigate('/');
+            window.location.reload(); 
+        }, 1500);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await authService.login(formData);
+            if (res.success) {
+                handleLoginSuccess(res.token, '👋 Đăng nhập thành công! Chào mừng trở lại.');
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || '❌ Đăng nhập thất bại!');
+        }
+    };
+
+    const handleGoogleSuccess = async (credentialResponse) => {
+        try {
+            const decoded = jwtDecode(credentialResponse.credential);
+            const res = await authService.loginGoogle({
+                email: decoded.email,
+                ho_ten: decoded.name,
+                google_sub: decoded.sub,
+                avatar_url: decoded.picture
+            });
+
+            if (res.success) {
+                handleLoginSuccess(res.token, '👋 Đăng nhập Google thành công!');
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error('❌ Lỗi đăng nhập Google!');
+        }
+    };
+
     return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
             <div className="bg-surface w-full max-w-[1000px] h-[600px] rounded-2xl shadow-2xl overflow-hidden flex relative">
@@ -29,29 +80,37 @@ const Login = () => {
                         <p className="text-text-muted text-sm">Nhập thông tin tài khoản của bạn</p>
                     </div>
 
-                    <form className="space-y-5">
+                    <form className="space-y-5" onSubmit={handleSubmit}>
                         <div className="group">
                             <div className="relative">
-                                <div className="absolute top-1/2 -translate-y-1/2 left-4 text-text-muted group-focus-within:text-brand-primary transition-colors">
+                                <div className="absolute top-1/2 -translate-y-1/2 left-4 text-text-muted">
                                     <FontAwesomeIcon icon={faEnvelope} />
                                 </div>
                                 <input 
                                     type="email" 
+                                    name="email"
                                     placeholder="Địa chỉ Email" 
-                                    className="w-full py-3.5 pl-12 pr-4 bg-background/50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-brand-primary/50 focus:shadow-md transition-all duration-300 font-body text-text-primary placeholder:text-text-muted/70"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full py-3.5 pl-12 pr-4 bg-background/50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-brand-primary/50 transition-all text-text-primary"
                                 />
                             </div>
                         </div>
 
                         <div className="group">
                             <div className="relative">
-                                <div className="absolute top-1/2 -translate-y-1/2 left-4 text-text-muted group-focus-within:text-brand-primary transition-colors">
+                                <div className="absolute top-1/2 -translate-y-1/2 left-4 text-text-muted">
                                     <FontAwesomeIcon icon={faLock} />
                                 </div>
                                 <input 
                                     type="password" 
+                                    name="mat_khau"
                                     placeholder="Mật khẩu" 
-                                    className="w-full py-3.5 pl-12 pr-4 bg-background/50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-brand-primary/50 focus:shadow-md transition-all duration-300 font-body text-text-primary placeholder:text-text-muted/70"
+                                    value={formData.mat_khau}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full py-3.5 pl-12 pr-4 bg-background/50 border border-transparent rounded-xl outline-none focus:bg-white focus:border-brand-primary/50 transition-all text-text-primary"
                                 />
                             </div>
                         </div>
@@ -64,7 +123,7 @@ const Login = () => {
                             <a href="#" className="hover:text-accent-primary transition-colors hover:underline">Quên mật khẩu?</a>
                         </div>
 
-                        <button className="w-full py-3.5 bg-brand-primary text-white rounded-xl font-bold shadow-lg shadow-brand-primary/30 hover:bg-brand-dark hover:shadow-brand-primary/50 transition-all duration-300 transform active:scale-[0.98]">
+                        <button type="submit" className="w-full py-3.5 bg-brand-primary text-white rounded-xl font-bold shadow-lg hover:bg-brand-dark transition-all transform active:scale-[0.98]">
                             ĐĂNG NHẬP
                         </button>
                     </form>
@@ -79,14 +138,19 @@ const Login = () => {
                     </div>
 
                     <div className="flex justify-center">
-                        <button className="w-full flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm font-bold text-text-secondary">
-                            <FontAwesomeIcon icon={faGoogle} className="text-red-500 text-lg" /> Google
-                        </button>
+                        <GoogleLogin 
+                            onSuccess={handleGoogleSuccess}
+                            onError={() => toast.error('❌ Đăng nhập Google thất bại')}
+                            useOneTap
+                            width="300"
+                            theme="outline"
+                            shape="circle"
+                        />
                     </div>
 
                     <div className="mt-8 text-center text-sm font-medium text-text-secondary">
                         Bạn chưa có tài khoản? 
-                        <Link to="/register" className="text-brand-primary font-bold ml-1 hover:underline decoration-2 underline-offset-4">
+                        <Link to="/register" className="text-brand-primary font-bold ml-1 hover:underline">
                             Đăng ký ngay
                         </Link>
                     </div>
