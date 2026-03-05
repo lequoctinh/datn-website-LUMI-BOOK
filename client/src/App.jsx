@@ -8,6 +8,10 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import VerifyEmail from './pages/auth/VerifyEmail';
 import Profile from './pages/auth/Profile';
+import Cart from "./pages/cart/Cart";
+import Checkout from "./pages/checkout/Checkout";
+import ProductDetail from "./pages/product/ProductDetail";
+import ProductList from "./pages/product/ProductList";
 
 function App() {
   return (
@@ -26,16 +30,25 @@ function App() {
       />
       
       <Routes>
+        <Route path="/" element={
+          <MainLayout> <Home /> </MainLayout>
+        } />
+        <Route path="/cart" element={
+          <MainLayout> <Cart /> </MainLayout>
+        } />
+        <Route path="/profile" element={
+          <MainLayout> <Profile /> </MainLayout>
+        } />
+        <Route path="/checkout" element={
+          <MainLayout> <Checkout /> </MainLayout>
+        } />
+        <Route path="/product/:id" element={<MainLayout> <ProductDetail /> </MainLayout>
+        } />
+        <Route path="/shop" element={<MainLayout> <ProductList /> </MainLayout>
+        } />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/profile" element={<Profile />} />
-        
-        <Route path="/" element={
-          <MainLayout>
-            <Home />
-          </MainLayout>
-        } />
       </Routes>
     </>
   );
