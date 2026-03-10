@@ -6,7 +6,7 @@ import {
     faUser, faBookOpen, faChartLine, faChild, 
     faGlobe, faFeather, faBrain, faLightbulb, 
     faEllipsisH, faPhone, faChevronRight,
-    faSignOutAlt 
+    faSignOutAlt, faTachometerAlt
 } from "@fortawesome/free-solid-svg-icons";
 import { useUser } from "../context/UserContext";
 import './css/HeaderMobile.css';
@@ -148,6 +148,18 @@ function HeaderMobile() {
                                     <div className="px-4 py-2 mt-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
                                         Tài khoản
                                     </div>
+                                    
+                                    {user.role === 'admin' && (
+                                        <Link 
+                                            to="/admin" 
+                                            onClick={toggleMenu}
+                                            className="flex items-center gap-4 px-5 py-3.5 border-b border-gray-50 hover:bg-brand-primary/5 cursor-pointer text-brand-primary font-bold block decoration-transparent"
+                                        >
+                                            <FontAwesomeIcon icon={faTachometerAlt} className="w-5" />
+                                            <span className="text-sm">Vào trang Quản trị</span>
+                                        </Link>
+                                    )}
+
                                     <Link 
                                         to="/profile" 
                                         onClick={toggleMenu}
