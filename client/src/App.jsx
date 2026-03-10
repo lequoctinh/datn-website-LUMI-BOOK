@@ -16,10 +16,8 @@ import Cart from "./pages/cart/Cart";
 import Checkout from "./pages/checkout/Checkout";
 import ProductDetail from "./pages/product/ProductDetail";
 import ProductList from "./pages/product/ProductList";
-
-// import Dashboard from './admin/pages/Dashboard';
-
 import Dashboard from './admin/pages/Dashboard';
+import Contact from './pages/contact/Contact';
 
 function App() {
   return (
@@ -47,6 +45,7 @@ function App() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/products" element={<ProductList />} />
+          <Route path="/contact" element={<Contact />} />
         </Route>
 
         <Route path="/admin" element={<AdminLayout />}>
