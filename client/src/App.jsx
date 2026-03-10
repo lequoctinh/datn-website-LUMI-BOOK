@@ -3,11 +3,9 @@ import { Routes, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 
 import MainLayout from './layouts';
-<<<<<<< HEAD
 import AdminLayout from './admin/layouts/AdminLayout';
-=======
 // import AdminLayout from './admin/layouts/AdminLayout';
->>>>>>> 338fdd4c776c318ffd0c2836517895408cbb601a
+
 
 import Home from './pages/home/Home';
 import Login from './pages/auth/Login';
@@ -50,7 +48,6 @@ function App() {
 
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Dashboard />} />
-=======
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/product/:id" element={<ProductDetail />} />
