@@ -120,14 +120,20 @@ function Header() {
                     
                     <div className="w-[1px] h-8 bg-gray-300/50"></div>
 
-                    <div className="relative cursor-pointer group">
-                        <div className="w-10 h-10 flex items-center justify-center text-text-primary group-hover:text-brand-primary transition-colors">
-                            <FontAwesomeIcon icon={faShoppingCart} className="text-2xl" />
-                        </div>
-                        <span className="cart-badge absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-md animate-bounce-short">
-                            0
-                        </span>
-                    </div>
+                    <Link 
+    to="/cart" 
+    className="relative cursor-pointer group flex items-center justify-center w-12 h-12 transition-all duration-300"
+>
+    {/* Icon giỏ hàng - Chuyển sang màu Brand khi hover */}
+    <div className="w-10 h-10 flex items-center justify-center text-text-primary group-hover:text-brand-primary transition-colors">
+        <FontAwesomeIcon icon={faShoppingCart} className="text-2xl" />
+    </div>
+
+    {/* Badge số lượng - Dùng màu accent-primary (Cam đất) để nổi bật trên nền Kem */}
+    <span className="cart-badge absolute top-1 right-1 w-5 h-5 bg-accent-primary text-white text-[10px] rounded-full flex items-center justify-center font-bold shadow-md animate-bounce-short ring-2 ring-background">
+        2
+    </span>
+</Link>
                 </div>
             </div>
 
@@ -169,9 +175,11 @@ function Header() {
                                             </div>
                                         ))}
                                     </div>
-                                    <div className="bg-brand-primary/5 p-3 text-center text-xs text-text-secondary font-bold uppercase tracking-widest border-t border-brand-primary/10 hover:bg-brand-primary/10 cursor-pointer transition-colors">
-                                        Xem tất cả thể loại
-                                    </div>
+                                    <Link to="/products" className="block"> 
+                                        <div className="bg-brand-primary/5 p-3 text-center text-xs text-text-secondary font-bold uppercase tracking-widest border-t border-brand-primary/10 hover:bg-brand-primary/10 cursor-pointer transition-colors">
+                                            Xem tất cả thể loại
+                                        </div>
+                                    </Link>
                                 </div>
                             )}
                         </div>

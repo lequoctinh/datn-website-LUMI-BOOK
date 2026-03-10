@@ -5,11 +5,11 @@ const cookieParser = require('cookie-parser');
 const { connectDB } = require('./config/db');
 const path = require('path');
 
+dotenv.config();
 // Route imports
 const authRoutes = require('./routes/authRoutes');
 
 // Config
-dotenv.config();
 connectDB();
 
 const app = express();
