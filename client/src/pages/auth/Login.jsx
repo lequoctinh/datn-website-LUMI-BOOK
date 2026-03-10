@@ -16,12 +16,16 @@ const Login = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleLoginSuccess = (token, message) => {
+    const handleLoginSuccess = (token, role, message) => {
         localStorage.setItem('lumi_token', token);
         toast.success(message);
         
         setTimeout(() => {
-            navigate('/');
+            if (role === 'admin') {
+                navigate('/admin');
+            } else {
+                navigate('/');
+            }
             window.location.reload(); 
         }, 1500);
     };
@@ -31,7 +35,7 @@ const Login = () => {
         try {
             const res = await authService.login(formData);
             if (res.success) {
-                handleLoginSuccess(res.token, '👋 Đăng nhập thành công! Chào mừng trở lại.');
+                handleLoginSuccess(res.token, res.user.role, '👋 Đăng nhập thành công! Chào mừng trở lại.');
             }
         } catch (error) {
             toast.error(error.response?.data?.message || '❌ Đăng nhập thất bại!');
@@ -49,7 +53,7 @@ const Login = () => {
             });
 
             if (res.success) {
-                handleLoginSuccess(res.token, '👋 Đăng nhập Google thành công!');
+                handleLoginSuccess(res.token, res.user.role, '👋 Đăng nhập Google thành công!');
             }
         } catch (error) {
             console.error(error);
@@ -161,7 +165,7 @@ const Login = () => {
                         <Link to="/register" className="text-brand-primary font-bold ml-1 hover:underline decoration-2 underline-offset-4">
                             Đăng ký ngay
                         </Link>
-                    </div>
+                    </div>  
                 </div>
             </div>
         </div>

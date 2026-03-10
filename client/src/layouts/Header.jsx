@@ -5,7 +5,7 @@ import {
     faSearch, faShoppingCart, faUser, faPhone, 
     faBars, faBookOpen, faChartLine, faChild, faGlobe, 
     faFeather, faBrain, faLightbulb, faEllipsisH, faTimes,
-    faSignOutAlt 
+    faSignOutAlt,faTachometerAlt
 } from "@fortawesome/free-solid-svg-icons";
 import { useUser } from "../context/UserContext";
 import './css/Header.css';
@@ -89,6 +89,11 @@ function Header() {
                                     <p className="text-sm font-bold text-text-primary truncate">{user.ho_ten}</p>
                                     <p className="text-xs text-text-muted truncate">{user.email}</p>
                                 </div>
+                                {user.role === 'admin' && (
+                                    <Link to="/admin" className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-brand-primary font-bold flex items-center gap-2 block border-b border-gray-100">
+                                        <FontAwesomeIcon icon={faTachometerAlt} className="w-4" /> Vào trang Quản trị
+                                    </Link>
+                                )}
                                 
                                 <Link to="/profile" className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700 font-medium flex items-center gap-2 block">
                                     <FontAwesomeIcon icon={faUser} className="text-gray-400 w-4" /> Thông tin cá nhân
