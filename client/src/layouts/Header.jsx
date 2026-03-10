@@ -175,7 +175,7 @@ function Header() {
                                             </div>
                                         ))}
                                     </div>
-                                    <Link to="/shop" className="block"> 
+                                    <Link to="/products" className="block"> 
                                         <div className="bg-brand-primary/5 p-3 text-center text-xs text-text-secondary font-bold uppercase tracking-widest border-t border-brand-primary/10 hover:bg-brand-primary/10 cursor-pointer transition-colors">
                                             Xem tất cả thể loại
                                         </div>
