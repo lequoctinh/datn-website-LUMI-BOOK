@@ -15,17 +15,16 @@ import Profile from './pages/auth/Profile';
 import Cart from "./pages/cart/Cart";
 import Checkout from "./pages/checkout/Checkout";
 import ProductDetail from "./pages/product/ProductDetail";
+import ProductList from "./pages/product/ProductList";
+import Contact from './pages/contact/Contact';
 
-import ProductList from "./pages/product/ProductList"
 
 import Dashboard from './admin/pages/Dashboard';
 import BookManager from './admin/pages/BookManager';
 import CategoryManager from './admin/pages/CategoryManager';
 import AuthorManager from './admin/pages/AuthorManager';
 import PublisherManager from './admin/pages/PublisherManager';
-import ProductList from "./pages/product/ProductList";
-import Dashboard from './admin/pages/Dashboard';
-import Contact from './pages/contact/Contact';
+
 
 function App() {
   return (
