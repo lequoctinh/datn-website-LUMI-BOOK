@@ -8,6 +8,10 @@ const path = require('path');
 dotenv.config();
 // Route imports
 const authRoutes = require('./routes/authRoutes');
+const bookRoutes = require('./routes/bookRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const authorRoutes = require('./routes/authorRoutes');
+const publisherRoutes = require('./routes/publisherRoutes');
 
 // Config
 connectDB();
@@ -22,7 +26,10 @@ app.use(cors());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/api/books', bookRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/authors', authorRoutes);
+app.use('/api/publishers', publisherRoutes);
 
 // Root route
 app.get('/', (req, res) => {

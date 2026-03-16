@@ -9,11 +9,9 @@ const Dashboard = () => {
         { title: 'Sản Phẩm', value: '1,240', icon: faBook, color: 'text-brand-primary', bg: 'bg-brand-primary/20' },
         { title: 'Khách Hàng', value: '890', icon: faUsers, color: 'text-purple-500', bg: 'bg-purple-100' },
     ];
-
     return (
         <div className="animate-fade-in-down">
             <h2 className="text-2xl font-heading font-bold text-gray-800 mb-6">Tổng Quan Hệ Thống</h2>
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {stats.map((stat, index) => (
                     <div key={index} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer">
@@ -37,5 +35,4 @@ const Dashboard = () => {
         </div>
     );
 };
-
 export default Dashboard;

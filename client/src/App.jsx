@@ -4,7 +4,7 @@ import { ToastContainer } from 'react-toastify';
 
 import MainLayout from './layouts';
 import AdminLayout from './admin/layouts/AdminLayout';
-// import AdminLayout from './admin/layouts/AdminLayout';
+
 
 
 import Home from './pages/home/Home';
@@ -15,11 +15,13 @@ import Profile from './pages/auth/Profile';
 import Cart from "./pages/cart/Cart";
 import Checkout from "./pages/checkout/Checkout";
 import ProductDetail from "./pages/product/ProductDetail";
-import ProductList from "./pages/product/ProductList";
-
-// import Dashboard from './admin/pages/Dashboard';
+import ProductList from "./pages/product/ProductList"
 
 import Dashboard from './admin/pages/Dashboard';
+import BookManager from './admin/pages/BookManager';
+import CategoryManager from './admin/pages/CategoryManager';
+import AuthorManager from './admin/pages/AuthorManager';
+import PublisherManager from './admin/pages/PublisherManager';
 
 function App() {
   return (
@@ -49,10 +51,13 @@ function App() {
           <Route path="/products" element={<ProductList />} />
         </Route>
 
-        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Dashboard />} />
+          <Route path="books" element={<BookManager />} />
+          <Route path="categories" element={<CategoryManager />} />
+          <Route path="authors" element={<AuthorManager />} />
+          <Route path="publishers" element={<PublisherManager />} />
         </Route>
-
       </Routes>
     </>
   );

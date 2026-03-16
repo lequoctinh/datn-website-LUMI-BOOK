@@ -9,11 +9,9 @@ function MainLayout() {
         <div className="flex flex-col min-h-screen bg-background font-body text-text-primary">
             <Header />
             <HeaderMobile />
-
             <main className="flex-grow w-full">
                 <Outlet />
             </main>
-
             <Footer />
         </div>
     );

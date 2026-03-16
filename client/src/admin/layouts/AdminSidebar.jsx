@@ -3,7 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
     faTachometerAlt, faBook, faTags, faShoppingCart, 
-    faUsers, faStar, faImage, faSignOutAlt, faBookOpen
+    faUsers, faStar, faImage, faSignOutAlt, faBookOpen,
+    faUserPen, faBuilding 
 } from '@fortawesome/free-solid-svg-icons';
 import { useUser } from '../../context/UserContext';
 
@@ -15,6 +16,8 @@ const AdminSidebar = () => {
         { title: 'Tổng quan', icon: faTachometerAlt, path: '/admin' },
         { title: 'Quản lý Sách', icon: faBook, path: '/admin/books' },
         { title: 'Danh mục', icon: faTags, path: '/admin/categories' },
+        { title: 'Tác giả', icon: faUserPen, path: '/admin/authors' },
+        { title: 'Nhà xuất bản', icon: faBuilding, path: '/admin/publishers' },
         { title: 'Đơn hàng', icon: faShoppingCart, path: '/admin/orders' },
         { title: 'Khách hàng', icon: faUsers, path: '/admin/users' },
         { title: 'Đánh giá', icon: faStar, path: '/admin/reviews' },

@@ -28,16 +28,13 @@ exports.getAddresses = async (req, res) => {
         res.status(500).json({ message: 'Lỗi server' });
     }
 };
-
 exports.addAddress = async (req, res) => {
     const { ho_ten_nhan, sdt_nhan, tinh_thanh, quan_huyen, phuong_xa, dia_chi_chi_tiet, is_default } = req.body;
     const userId = req.user.id;
-    
     try {
         if (is_default) {
             await pool.execute('UPDATE dia_chi SET is_default = 0 WHERE nguoi_dung_id = ?', [userId]);
         }
-
         await pool.execute(
             `INSERT INTO dia_chi (nguoi_dung_id, ho_ten_nhan, sdt_nhan, tinh_thanh, quan_huyen, phuong_xa, dia_chi_chi_tiet, is_default) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -49,7 +46,6 @@ exports.addAddress = async (req, res) => {
         res.status(500).json({ message: 'Lỗi thêm địa chỉ' });
     }
 };
-
 exports.deleteAddress = async (req, res) => {
     try {
         await pool.execute('DELETE FROM dia_chi WHERE id = ? AND nguoi_dung_id = ?', [req.params.id, req.user.id]);
