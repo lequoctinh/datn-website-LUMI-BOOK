@@ -133,14 +133,6 @@ function Header() {
                     2
                 </span>
                     </Link>
-                    <Link to="/cart"className="relative cursor-pointer group flex items-center justify-center w-12 h-12 transition-all duration-300">
-                                    <div className="w-10 h-10 flex items-center justify-center text-text-primary group-hover:text-brand-primary transition-colors">
-                                        <FontAwesomeIcon icon={faShoppingCart} className="text-2xl" />
-                                    </div>
-                                    <span className="cart-badge absolute top-1 right-1 w-5 h-5 bg-accent-primary text-white text-[10px] rounded-full flex items-center justify-center font-bold shadow-md animate-bounce-short ring-2 ring-background">
-                                        2
-                                    </span>
-                                </Link>
                 </div>
             </div>
             <div className="border-t border-b border-brand-primary/10 bg-white shadow-sm relative z-40">
