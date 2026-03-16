@@ -36,7 +36,6 @@ function HeaderMobile() {
         logout(); 
         setIsMenuOpen(false); 
     };
-
     return (
         <>
             <div className="mobile-header-wrapper w-full h-16 flex items-center justify-between px-4 sticky top-0 z-40 bg-background border-b border-black/5 md:hidden">
@@ -51,7 +50,6 @@ function HeaderMobile() {
                         LUMI BOOK
                     </Link>
                 </div>
-
                 <div className="flex items-center gap-3">
                     <button 
                         onClick={toggleSearch}
@@ -72,7 +70,6 @@ function HeaderMobile() {
                     </div>
                 </div>
             </div>
-
             {isSearchOpen && (
                 <div className="mobile-search-bar fixed top-16 left-0 w-full bg-white p-4 shadow-lg z-30 animate-slide-down md:hidden">
                     <div className="relative">
@@ -88,14 +85,12 @@ function HeaderMobile() {
                     </div>
                 </div>
             )}
-
             {isMenuOpen && (
                 <div className="fixed inset-0 z-50 md:hidden flex">
                     <div 
                         className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
                         onClick={toggleMenu}
                     ></div>
-                    
                     <div className="relative w-[85%] max-w-[320px] h-full bg-white shadow-2xl animate-slide-in flex flex-col">
                         <div className="p-5 bg-brand-primary text-white flex flex-col gap-3">
                             <div className="flex justify-between items-start">
@@ -110,7 +105,6 @@ function HeaderMobile() {
                                     <FontAwesomeIcon icon={faTimes} className="text-xl" />
                                 </button>
                             </div>
-                            
                             <div>
                                 {user ? (
                                     <>
@@ -129,7 +123,6 @@ function HeaderMobile() {
                                 )}
                             </div>
                         </div>
-
                         <div className="flex-1 overflow-y-auto py-2">
                             <div className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
                                 Danh mục sách
@@ -146,13 +139,11 @@ function HeaderMobile() {
                                     <FontAwesomeIcon icon={faChevronRight} className="text-xs text-gray-300" />
                                 </div>
                             ))}
-
                             {user && (
                                 <>
                                     <div className="px-4 py-2 mt-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
                                         Tài khoản
                                     </div>
-                                    
                                     {user.role === 'admin' && (
                                         <Link 
                                             to="/admin" 
@@ -163,7 +154,6 @@ function HeaderMobile() {
                                             <span className="text-sm">Vào trang Quản trị</span>
                                         </Link>
                                     )}
-
                                     <Link 
                                         to="/profile" 
                                         onClick={toggleMenu}
@@ -186,7 +176,6 @@ function HeaderMobile() {
                                 </>
                             )}
                         </div>
-
                         <div className="p-4 bg-gray-50 border-t border-gray-100 mt-auto">
                             <div className="flex items-center gap-3 text-brand-primary font-bold text-sm mb-2">
                                 <FontAwesomeIcon icon={faPhone} />
@@ -200,5 +189,4 @@ function HeaderMobile() {
         </>
     );
 }
-
 export default HeaderMobile;

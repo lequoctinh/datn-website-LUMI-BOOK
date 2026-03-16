@@ -1,154 +1,293 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// Sửa: Thay faTruckFast -> faTruck, faShieldCheck -> faShield
-import { faStar, faCartPlus, faTruck, faShield, faRotateLeft, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
+import { faStar, faCartPlus, faTruck, faShield, faRotateLeft, faPlus, faMinus, faTags, faLanguage, faBookOpen, faRulerCombined, faBookAtlas, faCalendarAlt, faStore, faChevronRight, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
+import bookService from '../../services/bookService';
 
 const ProductDetail = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [quantity, setQuantity] = useState(1);
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const [book, setBook] = useState(null);
+    const [relatedBooks, setRelatedBooks] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [quantity, setQuantity] = useState(1);
+    const [activeImage, setActiveImage] = useState('');
+    const [allImages, setAllImages] = useState([]);
 
-  // Dữ liệu mẫu
-  const book = {
-    title: "Nhà Giả Kim (Tái Bản 2024)",
-    author: "Paulo Coelho",
-    price: 79000,
-    oldPrice: 99000,
-    rating: 4.8,
-    reviews: 1250,
-    description: "Tất cả những trải nghiệm trong chuyến phiêu lưu theo đuổi vận mệnh của mình đã giúp Santiago thấu hiểu được ý nghĩa sâu xa nhất của hạnh phúc, hòa hợp với vũ trụ và con người...",
-    publisher: "NXB Hội Nhà Văn",
-    category: "Văn học nước ngoài",
-    images: [
-      "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600",
-      "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600"
-    ]
-  };
+    useEffect(() => {
+        const fetchBookDetail = async () => {
+            setLoading(true);
+            try {
+                const res = await bookService.getPublicBookById(id);
+                if (res.success) {
+                    const data = res.data;
+                    setBook(data);
+                    
+                    let albumArray = [];
+                    try {
+                        albumArray = typeof data.album_anh === 'string' ? JSON.parse(data.album_anh) : (data.album_anh || []);
+                    } catch (e) {}
+                    
+                    const images = [data.hinh_anh, ...albumArray].filter(Boolean);
+                    setAllImages(images);
+                    setActiveImage(images[0] || 'https://via.placeholder.com/400x600?text=No+Image');
 
-  const handleAddToCart = () => {
-    toast.success(`Đã thêm ${quantity} cuốn ${book.title} vào giỏ hàng!`);
-  };
+                    const relatedRes = await bookService.getBestSellers();
+                    if (relatedRes.success) {
+                        setRelatedBooks(relatedRes.data.filter(b => b.id !== parseInt(id)).slice(0, 4));
+                    }
+                }
+            } catch (error) {
+                toast.error("Không thể tải thông tin sách!");
+                navigate('/');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchBookDetail();
+        setQuantity(1);
+    }, [id, navigate]);
 
-  return (
-    <div className="min-h-screen bg-background py-10 px-4 sm:px-6 lg:px-8 font-body text-text-primary">
-      <div className="max-w-7xl mx-auto">
-        
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 bg-surface p-8 rounded-3xl shadow-card border border-border-light">
-          
-          {/* Cột Trái: Hình ảnh */}
-          <div className="space-y-4">
-            <div className="aspect-[3/4] rounded-2xl overflow-hidden border border-border-light shadow-md bg-white">
-              <img src={book.images[0]} alt={book.title} className="w-full h-full object-contain p-4 transition-transform hover:scale-105 duration-500" />
-            </div>
-            <div className="grid grid-cols-4 gap-4">
-              {book.images.map((img, idx) => (
-                <div key={idx} className="aspect-square rounded-lg border-2 border-border-light cursor-pointer hover:border-brand-primary overflow-hidden">
-                  <img src={img} className="w-full h-full object-cover" />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Cột Phải: Thông tin chi tiết */}
-          <div className="flex flex-col">
-            <nav className="text-sm text-text-secondary mb-4 italic">
-              Trang chủ / {book.category} / <span className="text-brand-primary font-semibold">{book.author}</span>
-            </nav>
-
-            <h1 className="font-heading text-4xl mb-4 leading-tight">{book.title}</h1>
-            
-            <div className="flex items-center gap-6 mb-6">
-              <div className="flex items-center text-accent-primary">
-                {[...Array(5)].map((_, i) => (
-                  <FontAwesomeIcon key={i} icon={faStar} className={i < 4 ? "text-accent-primary" : "text-border-default"} />
-                ))}
-                <span className="ml-2 text-text-primary font-bold">{book.rating}</span>
-              </div>
-              <span className="text-text-muted">|</span>
-              <span className="text-text-secondary">{book.reviews} đánh giá</span>
-            </div>
-
-            <div className="bg-background/50 p-6 rounded-2xl mb-8 border border-border-light/50">
-              <div className="flex items-baseline gap-4">
-                <span className="text-4xl font-bold text-accent-primary">{book.price.toLocaleString()} đ</span>
-                <span className="text-lg text-text-muted line-through">{book.oldPrice.toLocaleString()} đ</span>
-                <span className="bg-state-danger text-white px-2 py-0.5 rounded text-sm font-bold">-20%</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-y-4 mb-8 text-sm border-b border-border-light pb-6">
-              <div className="flex flex-col gap-1">
-                <span className="text-text-secondary uppercase text-[11px] tracking-wider font-bold">Tác giả</span>
-                <span className="font-bold text-brand-primary">{book.author}</span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-text-secondary uppercase text-[11px] tracking-wider font-bold">Nhà xuất bản</span>
-                <span className="font-bold">{book.publisher}</span>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <div className="flex items-center gap-6">
-                <span className="font-bold">Số lượng:</span>
-                <div className="flex items-center border-2 border-border-default rounded-xl bg-background overflow-hidden">
-                  <button onClick={() => setQuantity(q => Math.max(1, q-1))} className="p-3 hover:text-accent-primary transition-colors">
-                    <FontAwesomeIcon icon={faMinus} />
-                  </button>
-                  <span className="px-6 font-bold text-lg min-w-[60px] text-center">{quantity}</span>
-                  <button onClick={() => setQuantity(q => q+1)} className="p-3 hover:text-accent-primary transition-colors">
-                    <FontAwesomeIcon icon={faPlus} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-                <button 
-                  onClick={handleAddToCart}
-                  className="bg-brand-primary hover:bg-brand-hover text-white py-4 rounded-xl font-bold shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 uppercase tracking-wide"
-                >
-                  <FontAwesomeIcon icon={faCartPlus} /> Thêm vào giỏ
-                </button>
-                <button 
-                  onClick={() => navigate('/checkout')}
-                  className="bg-accent-primary hover:bg-accent-hover text-white py-4 rounded-xl font-bold shadow-md transition-all active:scale-95 uppercase tracking-wide"
-                >
-                  Mua ngay
-                </button>
-              </div>
-            </div>
-
-            {/* Chính sách cam kết - Đã sửa lỗi icon ở đây */}
-            <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-border-light pt-8">
-              <div className="flex items-center gap-3 text-xs text-text-secondary">
-                <FontAwesomeIcon icon={faTruck} className="text-brand-primary text-xl" />
-                <span>Giao siêu tốc 2h</span>
-              </div>
-              <div className="flex items-center gap-3 text-xs text-text-secondary">
-                <FontAwesomeIcon icon={faShield} className="text-brand-primary text-xl" />
-                <span>Sách thật 100%</span>
-              </div>
-              <div className="flex items-center gap-3 text-xs text-text-secondary">
-                <FontAwesomeIcon icon={faRotateLeft} className="text-brand-primary text-xl" />
-                <span>Đổi trả 7 ngày</span>
-              </div>
-            </div>
-          </div>
+    if (loading) return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="w-16 h-16 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
+    );
 
-        {/* Mô tả chi tiết */}
-        <div className="mt-12 bg-surface p-8 rounded-3xl shadow-card border border-border-light">
-          <h2 className="font-heading text-2xl mb-6 border-b border-border-light pb-4 text-brand-primary">Giới thiệu nội dung</h2>
-          <div className="prose max-w-none text-text-secondary leading-relaxed space-y-4 italic">
-            <p>{book.description}</p>
-          </div>
+    if (!book) return null;
+
+    const isDiscounted = book.gia_giam > 0 && book.gia_giam < book.gia_ban;
+    const currentPrice = isDiscounted ? book.gia_giam : book.gia_ban;
+    const percentDiscount = isDiscounted ? Math.round(((book.gia_ban - book.gia_giam) / book.gia_ban) * 100) : 0;
+    const MAX_THUMBNAILS = 5;
+    const visibleThumbnails = allImages.slice(0, MAX_THUMBNAILS);
+    const overflowCount = allImages.length - MAX_THUMBNAILS;
+    const authors = book.tac_gia?.map(t => t.ten_tac_gia).join(', ') || 'Đang cập nhật';
+    const categories = book.danh_muc?.map(c => c.ten_danh_muc).join(', ') || 'Đang cập nhật';
+
+    const handleAddToCart = () => {
+        toast.success(`Đã thêm ${quantity} cuốn vào giỏ hàng!`);
+    };
+
+    const handleBuyNow = () => {
+        handleAddToCart();
+        navigate('/checkout');
+    };
+
+    return (
+        <div className="min-h-screen bg-gray-50 pb-20">
+            <div className="bg-white border-b border-gray-100 py-4 mb-8 sticky top-0 z-40 shadow-sm">
+                <div className="max-w-[1200px] mx-auto px-4 flex items-center gap-2 text-sm text-gray-500 font-medium">
+                    <Link to="/" className="hover:text-brand-primary transition-colors">Trang chủ</Link>
+                    <FontAwesomeIcon icon={faChevronRight} className="text-[10px]" />
+                    <span className="hover:text-brand-primary transition-colors cursor-pointer">{categories.split(',')[0]}</span>
+                    <FontAwesomeIcon icon={faChevronRight} className="text-[10px]" />
+                    <span className="text-gray-800 font-bold truncate max-w-[200px] sm:max-w-md">{book.ten_sach}</span>
+                </div>
+            </div>
+
+            <div className="max-w-[1200px] mx-auto px-4 space-y-8">
+                
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 lg:p-10 flex flex-col lg:flex-row gap-10 lg:gap-16">
+                    
+                    <div className="w-full lg:w-[45%] flex flex-col gap-6 select-none">
+                        <div className="w-full aspect-[3/4] rounded-2xl border border-gray-100 bg-gray-50 flex items-center justify-center p-4 relative group overflow-hidden">
+                            {isDiscounted && (
+                                <div className="absolute top-4 right-4 z-10 bg-red-600 text-white font-black px-3 py-1.5 rounded-full shadow-lg text-sm">
+                                    -{percentDiscount}%
+                                </div>
+                            )}
+                            <img src={activeImage} alt={book.ten_sach} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500 ease-out" />
+                        </div>
+
+                        {allImages.length > 1 && (
+                            <div className="flex items-center gap-3 overflow-x-auto custom-scrollbar pb-2">
+                                {visibleThumbnails.map((img, index) => {
+                                    const isLastAndOverflow = index === MAX_THUMBNAILS - 1 && overflowCount > 0;
+                                    const isActive = activeImage === img;
+                                    return (
+                                        <div key={index} onClick={() => !isLastAndOverflow && setActiveImage(img)} className={`relative w-20 aspect-[3/4] rounded-xl border-2 cursor-pointer overflow-hidden flex-shrink-0 transition-all duration-300 ${isActive && !isLastAndOverflow ? 'border-brand-primary ring-4 ring-brand-primary/20' : 'border-gray-100 hover:border-gray-300'}`}>
+                                            <img src={img} className="w-full h-full object-cover" />
+                                            {isLastAndOverflow && (
+                                                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white backdrop-blur-[2px] transition-colors hover:bg-black/70">
+                                                    <span className="font-black text-xl">+{overflowCount + 1}</span>
+                                                    <span className="text-[10px] uppercase font-bold tracking-widest">Xem thêm</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="w-full lg:w-[55%] flex flex-col">
+                        <div className="mb-6">
+                            <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight tracking-tight mb-4 font-heading">{book.ten_sach}</h1>
+                            <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-sm">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-gray-500 font-medium">Tác giả:</span>
+                                    <span className="font-bold text-brand-primary">{authors}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-gray-500 font-medium">Nhà cung cấp:</span>
+                                    <span className="font-bold text-gray-800">{book.nha_cung_cap || 'Đang cập nhật'}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-yellow-400">
+                                    <FontAwesomeIcon icon={faStar} />
+                                    <FontAwesomeIcon icon={faStar} />
+                                    <FontAwesomeIcon icon={faStar} />
+                                    <FontAwesomeIcon icon={faStar} />
+                                    <FontAwesomeIcon icon={faStar} className="text-gray-300" />
+                                    <span className="text-gray-500 font-medium ml-1">(Chưa có đánh giá)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-gray-50/80 rounded-2xl p-6 mb-8 border border-gray-100">
+                            <div className="flex flex-wrap items-end gap-4">
+                                <span className="text-4xl font-black text-red-600 tracking-tight">{Number(currentPrice).toLocaleString('vi-VN')} đ</span>
+                                {isDiscounted && (
+                                    <span className="text-lg font-bold text-gray-400 line-through mb-1.5">{Number(book.gia_ban).toLocaleString('vi-VN')} đ</span>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8 text-sm">
+                            <div className="flex flex-col gap-1 bg-white border border-gray-100 p-3 rounded-xl shadow-sm">
+                                <span className="text-gray-500 flex items-center gap-2"><FontAwesomeIcon icon={faLanguage} className="text-brand-primary/70" />Ngôn ngữ</span>
+                                <span className="font-bold text-gray-800">{book.ngon_ngu || 'Tiếng Việt'}</span>
+                            </div>
+                            <div className="flex flex-col gap-1 bg-white border border-gray-100 p-3 rounded-xl shadow-sm">
+                                <span className="text-gray-500 flex items-center gap-2"><FontAwesomeIcon icon={faBookOpen} className="text-brand-primary/70" />Hình thức bìa</span>
+                                <span className="font-bold text-gray-800">{book.hinh_thuc || 'Đang cập nhật'}</span>
+                            </div>
+                            <div className="flex flex-col gap-1 bg-white border border-gray-100 p-3 rounded-xl shadow-sm">
+                                <span className="text-gray-500 flex items-center gap-2"><FontAwesomeIcon icon={faRulerCombined} className="text-brand-primary/70" />Kích thước</span>
+                                <span className="font-bold text-gray-800">{book.kich_thuoc || 'Đang cập nhật'}</span>
+                            </div>
+                            <div className="flex flex-col gap-1 bg-white border border-gray-100 p-3 rounded-xl shadow-sm">
+                                <span className="text-gray-500 flex items-center gap-2"><FontAwesomeIcon icon={faStore} className="text-brand-primary/70" />Nhà xuất bản</span>
+                                <span className="font-bold text-gray-800">{book.ten_nha_xuat_ban || 'Đang cập nhật'}</span>
+                            </div>
+                            <div className="flex flex-col gap-1 bg-white border border-gray-100 p-3 rounded-xl shadow-sm">
+                                <span className="text-gray-500 flex items-center gap-2"><FontAwesomeIcon icon={faCalendarAlt} className="text-brand-primary/70" />Năm xuất bản</span>
+                                <span className="font-bold text-gray-800">{book.nam_xuat_ban || 'Đang cập nhật'}</span>
+                            </div>
+                            <div className="flex flex-col gap-1 bg-white border border-gray-100 p-3 rounded-xl shadow-sm">
+                                <span className="text-gray-500 flex items-center gap-2"><FontAwesomeIcon icon={faBookAtlas} className="text-brand-primary/70" />Số trang</span>
+                                <span className="font-bold text-gray-800">{book.so_trang ? `${book.so_trang} trang` : 'Đang cập nhật'}</span>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-6 mb-8 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                            <span className="font-bold text-gray-800 uppercase text-sm tracking-widest">Số lượng</span>
+                            <div className="flex items-center bg-gray-50 rounded-xl border border-gray-200">
+                                <button onClick={() => setQuantity(q => Math.max(1, q-1))} className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-brand-primary transition-colors"><FontAwesomeIcon icon={faMinus} /></button>
+                                <span className="w-12 text-center font-black text-gray-800">{quantity}</span>
+                                <button onClick={() => setQuantity(q => Math.min(book.so_luong_ton, q+1))} className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-brand-primary transition-colors"><FontAwesomeIcon icon={faPlus} /></button>
+                            </div>
+                            <span className="text-sm font-medium text-gray-500">
+                                {book.so_luong_ton > 0 ? `Còn ${book.so_luong_ton} cuốn` : <span className="text-red-500 font-bold">Hết hàng</span>}
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-auto">
+                            <button onClick={handleAddToCart} disabled={book.so_luong_ton <= 0} className={`py-4 rounded-xl font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 border-2 ${book.so_luong_ton > 0 ? 'bg-white border-brand-primary text-brand-primary hover:bg-brand-primary/5 active:scale-95' : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'}`}>
+                                <FontAwesomeIcon icon={faCartPlus} className="text-xl" /> Thêm vào giỏ
+                            </button>
+                            <button onClick={handleBuyNow} disabled={book.so_luong_ton <= 0} className={`py-4 rounded-xl font-black uppercase tracking-widest transition-all duration-300 shadow-lg ${book.so_luong_ton > 0 ? 'bg-brand-primary text-white hover:bg-brand-dark shadow-brand-primary/30 active:scale-95' : 'bg-gray-300 text-white cursor-not-allowed shadow-none'}`}>
+                                Mua ngay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10">
+                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+                            <div className="w-1.5 h-6 bg-brand-primary rounded-full"></div>
+                            <h2 className="text-xl font-black text-gray-800 uppercase tracking-wide">Giới thiệu sách</h2>
+                        </div>
+                        <div className="prose prose-gray max-w-none">
+                            {book.mo_ta && <p className="text-gray-600 font-medium italic mb-6 leading-relaxed">{book.mo_ta}</p>}
+                            <div className="text-gray-700 leading-loose text-justify whitespace-pre-line">
+                                {book.noi_dung || 'Nội dung chi tiết đang được cập nhật...'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-6">
+                        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+                            <h3 className="text-lg font-black text-gray-800 uppercase mb-4 tracking-wide text-center">Cam kết từ Lumi</h3>
+                            <div className="space-y-4">
+                                <div className="flex items-start gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+                                    <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0"><FontAwesomeIcon icon={faShield} /></div>
+                                    <div><p className="font-bold text-gray-800 text-sm">100% Sách thật</p><p className="text-xs text-gray-500 mt-0.5">Hoàn tiền 200% nếu phát hiện sách giả</p></div>
+                                </div>
+                                <div className="flex items-start gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+                                    <div className="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0"><FontAwesomeIcon icon={faRotateLeft} /></div>
+                                    <div><p className="font-bold text-gray-800 text-sm">Đổi trả 30 ngày</p><p className="text-xs text-gray-500 mt-0.5">Miễn phí đổi trả do lỗi nhà sản xuất</p></div>
+                                </div>
+                                <div className="flex items-start gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+                                    <div className="w-10 h-10 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center flex-shrink-0"><FontAwesomeIcon icon={faTruck} /></div>
+                                    <div><p className="font-bold text-gray-800 text-sm">Giao hàng hỏa tốc</p><p className="text-xs text-gray-500 mt-0.5">Nhận sách trong 2h tại TP.HCM & HN</p></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-brand-primary rounded-3xl shadow-sm p-6 text-white text-center relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                            <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/10 rounded-full blur-xl -ml-10 -mb-10"></div>
+                            <FontAwesomeIcon icon={faTags} className="text-4xl mb-3 opacity-90" />
+                            <h3 className="font-black text-lg uppercase tracking-wide mb-2">Ưu đãi thanh toán</h3>
+                            <p className="text-sm text-white/90 mb-4">Nhập mã <strong className="bg-white text-brand-primary px-1.5 py-0.5 rounded">LUMIBOOK</strong> giảm thêm 15% cho đơn hàng đầu tiên.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {relatedBooks.length > 0 && (
+                    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10">
+                        <div className="flex items-center justify-between mb-8 border-b border-gray-100 pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-1.5 h-6 bg-accent-primary rounded-full"></div>
+                                <h2 className="text-xl font-black text-gray-800 uppercase tracking-wide">Có thể bạn sẽ thích</h2>
+                            </div>
+                            <div className="flex gap-2">
+                                <button className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-brand-primary hover:border-brand-primary transition-colors"><FontAwesomeIcon icon={faChevronLeft} className="text-xs" /></button>
+                                <button className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-brand-primary hover:border-brand-primary transition-colors"><FontAwesomeIcon icon={faChevronRight} className="text-xs" /></button>
+                            </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                            {relatedBooks.map((relBook) => {
+                                const relDiscounted = relBook.gia_giam > 0 && relBook.gia_giam < relBook.gia_ban;
+                                const relPrice = relDiscounted ? relBook.gia_giam : relBook.gia_ban;
+                                const relPercent = relDiscounted ? Math.round(((relBook.gia_ban - relBook.gia_giam) / relBook.gia_ban) * 100) : 0;
+
+                                return (
+                                    <Link to={`/product/${relBook.id}`} key={relBook.id} className="group flex flex-col gap-3">
+                                        <div className="aspect-[3/4] rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden relative">
+                                            {relDiscounted && <div className="absolute top-2 right-2 bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-full z-10">-{relPercent}%</div>}
+                                            <img src={relBook.hinh_anh || 'https://via.placeholder.com/300x400'} alt={relBook.ten_sach} className="w-full h-full object-contain mix-blend-multiply p-4 group-hover:scale-110 transition-transform duration-500" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <h3 className="font-bold text-gray-800 line-clamp-2 text-sm group-hover:text-brand-primary transition-colors min-h-[40px]">{relBook.ten_sach}</h3>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className="font-black text-red-600">{Number(relPrice).toLocaleString('vi-VN')} đ</span>
+                                                {relDiscounted && <span className="text-xs text-gray-400 line-through">{Number(relBook.gia_ban).toLocaleString('vi-VN')} đ</span>}
+                                            </div>  
+                                        </div>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
-
-      </div>
-    </div>
-  );
+    );
 };
 
 export default ProductDetail;

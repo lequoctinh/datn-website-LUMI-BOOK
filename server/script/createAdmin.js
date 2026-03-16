@@ -21,7 +21,6 @@ const createSuperAdmin = async () => {
         role: 'admin',
         trang_thai: 'active'
     };
-
     try {
         const [existing] = await pool.execute('SELECT id FROM nguoi_dung WHERE email = ?', [adminData.email]);
         
@@ -29,7 +28,6 @@ const createSuperAdmin = async () => {
             console.log('Tài khoản Admin đã tồn tại trong hệ thống!');
             process.exit(0);
         }
-
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(adminData.mat_khau, salt);
 

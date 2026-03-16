@@ -124,6 +124,15 @@ function Header() {
                     )}
                     
                     <div className="w-[1px] h-8 bg-gray-300/50"></div>
+
+                    <Link to="/cart" className="relative cursor-pointer group flex items-center justify-center w-12 h-12 transition-all duration-300">
+                <div className="w-10 h-10 flex items-center justify-center text-text-primary group-hover:text-brand-primary transition-colors">
+                    <FontAwesomeIcon icon={faShoppingCart} className="text-2xl" />
+                </div>
+                <span className="cart-badge absolute top-1 right-1 w-5 h-5 bg-accent-primary text-white text-[10px] rounded-full flex items-center justify-center font-bold shadow-md animate-bounce-short ring-2 ring-background">
+                    2
+                </span>
+                    </Link>
                     <Link to="/cart"className="relative cursor-pointer group flex items-center justify-center w-12 h-12 transition-all duration-300">
                                     <div className="w-10 h-10 flex items-center justify-center text-text-primary group-hover:text-brand-primary transition-colors">
                                         <FontAwesomeIcon icon={faShoppingCart} className="text-2xl" />
@@ -134,11 +143,9 @@ function Header() {
                                 </Link>
                 </div>
             </div>
-
             <div className="border-t border-b border-brand-primary/10 bg-white shadow-sm relative z-40">
                 <div className="container mx-auto px-4 relative">
                     <div className="flex items-center justify-between h-14">
-                        
                         <div ref={menuRef} className="relative h-full flex items-center">
                             <button 
                                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -150,7 +157,6 @@ function Header() {
                                 <FontAwesomeIcon icon={isMenuOpen ? faTimes : faBars} className="text-lg" />
                                 <span>Danh Mục Sản Phẩm</span>
                             </button>
-
                             {isMenuOpen && (
                                 <div className="absolute top-full left-0 w-[900px] bg-white shadow-2xl rounded-b-xl border-t-2 border-brand-primary animate-fade-in-down overflow-hidden z-[1002]">
                                     <div className="grid grid-cols-4 gap-4 p-6 bg-background/30">
@@ -181,7 +187,6 @@ function Header() {
                                 </div>
                             )}
                         </div>
-
                         <ul className="flex gap-8 text-sm font-bold uppercase tracking-wide font-heading text-text-secondary">
                             <li>
                                 <Link to="/" className="cursor-pointer hover:text-brand-primary transition-colors">Trang chủ</Link>
@@ -198,5 +203,4 @@ function Header() {
         </header>
     );
 }
-
 export default Header;

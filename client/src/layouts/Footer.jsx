@@ -5,10 +5,7 @@ function Footer() {
     return (
         <footer className="lumi-footer-section">
             <div className="lumi-footer-bg-pattern"></div>
-            
             <div className="lumi-footer-container">
-                
-                {/* --- PHẦN TRÊN: THƯƠNG HIỆU & NEWSLETTER --- */}
                 <div className="lumi-footer-top">
                     <div className="lumi-footer-brand">
                         <a href="/" className="lumi-footer-logo">LUMI BOOK</a>
@@ -16,7 +13,6 @@ function Footer() {
                             Hành trình tri thức bắt đầu từ những trang sách. Chúng tôi cam kết mang đến những ấn phẩm tinh hoa, lan tỏa văn hóa đọc đến mọi miền tổ quốc.
                         </p>
                     </div>
-
                     <div className="lumi-newsletter-box">
                         <h3 className="lumi-newsletter-title">
                             <i className="fa-regular fa-envelope"></i> Đăng ký nhận tin
@@ -33,11 +29,7 @@ function Footer() {
                         </form>
                     </div>
                 </div>
-
-                {/* --- PHẦN GIỮA: LIÊN KẾT --- */}
                 <div className="lumi-footer-links-grid">
-                    
-                    {/* Cột 1: Về Chúng Tôi */}
                     <div>
                         <h4 className="lumi-col-title">Về Lumi Book</h4>
                         <ul className="lumi-link-list">
@@ -55,8 +47,6 @@ function Footer() {
                             </li>
                         </ul>
                     </div>
-
-                    {/* Cột 2: Danh Mục Chính (Liên kết Header) */}
                     <div>
                         <h4 className="lumi-col-title">Khám Phá</h4>
                         <ul className="lumi-link-list">
@@ -74,8 +64,6 @@ function Footer() {
                             </li>
                         </ul>
                     </div>
-
-                    {/* Cột 3: Hỗ Trợ Khách Hàng */}
                     <div>
                         <h4 className="lumi-col-title">Hỗ Trợ</h4>
                         <ul className="lumi-link-list">
@@ -93,8 +81,6 @@ function Footer() {
                             </li>
                         </ul>
                     </div>
-
-                    {/* Cột 4: Liên Hệ */}
                     <div>
                         <h4 className="lumi-col-title">Liên Hệ</h4>
                         <ul className="lumi-link-list lumi-contact-info">
@@ -112,12 +98,9 @@ function Footer() {
                             </li>
                         </ul>
                     </div>
-
                 </div>
-
                 <div className="lumi-footer-bottom">
                     <p>© 2026 LUMI BOOK. All rights reserved. Designed by Nhom 2.</p>
-                    
                     <div className="lumi-socials">
                         <a href="#" className="lumi-social-link"><i className="fa-brands fa-facebook-f"></i></a>
                         <a href="#" className="lumi-social-link"><i className="fa-brands fa-instagram"></i></a>
@@ -125,7 +108,6 @@ function Footer() {
                         <a href="#" className="lumi-social-link"><i className="fa-brands fa-youtube"></i></a>
                     </div>
                 </div>
-
             </div>
         </footer>
     );
