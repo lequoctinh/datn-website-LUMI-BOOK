@@ -28,8 +28,17 @@ const bookService = {
         const response = await axios.patch(`${API_URL}/admin/${id}/status`, { trang_thai }, getAuthHeaders());
         return response.data;
     },
+    getAllBooks: async (params) => {
+    const queryString = new URLSearchParams(params).toString();
+    const res = await axios.get(`${API_URL}?${queryString}`); 
+    return res.data;
+    },
     getBestSellers: async () => {
         const response = await axios.get(`${API_URL}/best-sellers`);
+        return response.data;
+    },
+    getNewArrivals: async () => {
+        const response = await axios.get(`${API_URL}/new-arrivals`);
         return response.data;
     },
     getPublicBookById: async (id) => { 
