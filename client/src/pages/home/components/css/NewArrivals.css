@@ -215,3 +215,54 @@ width: 80px;
 background: linear-gradient(90deg, transparent, #8B5E3C, transparent);
 margin-top: 1rem;
 }
+@media (max-width: 767px) {
+    .ln-card {
+        height: 420px !important;
+        padding: 10px !important;
+    }
+
+    .ln-book-stage {
+        height: 200px;
+        margin-bottom: 10px;
+    }
+
+    .ln-book-obj {
+        width: 110px;  
+        height: 160px; 
+    }
+
+    .ln-spine {
+        width: 12px;
+        transform: rotateY(-90deg) translateX(-12px);
+    }
+    
+    .ln-pages {
+        width: 10px;
+        transform: rotateY(90deg) translateX(5px);
+    }
+
+    .ln-card h3 {
+        font-size: 0.9rem;
+        line-height: 1.25;
+        margin-top: 5px;
+    }
+
+    .ln-card .text-xl {
+        font-size: 1.1rem;
+    }
+
+    .ln-ribbon-mark {
+        width: 24px;
+        height: 40px;
+        left: 10px;
+    }
+
+    .ln-btn-cart {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .ln-btn-cart i {
+        font-size: 0.9rem;
+    }
+}

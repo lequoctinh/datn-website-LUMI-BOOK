@@ -220,3 +220,111 @@ exports.getBestSellers = async (req, res) => {
         res.status(500).json({ message: 'Lỗi server khi lấy sách bán chạy' });
     }
 };
+
+// LẤY SÁCH MỚI PHÁT HÀNH
+exports.getNewArrivals = async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                s.id, s.ten_sach, s.gia_ban, s.gia_giam, s.hinh_anh,
+                (SELECT tg.ten_tac_gia FROM sach_tac_gia stg 
+                JOIN tac_gia tg ON stg.tac_gia_id = tg.id 
+                WHERE stg.sach_id = s.id LIMIT 1) AS author,
+                s.created_at
+            FROM sach s
+            WHERE s.trang_thai = 'hien_thi'
+            ORDER BY s.created_at DESC
+            LIMIT 8
+        `;
+
+        const [rows] = await pool.query(query);
+        
+        const formattedData = rows.map(book => {
+            const discount = book.gia_giam > 0 
+                ? Math.round(((book.gia_ban - book.gia_giam) / book.gia_ban) * 100) 
+                : 0;
+            return { ...book, discount_percent: `-${discount}%` };
+        });
+
+        res.json({ success: true, data: formattedData });
+    } catch (error) {
+        console.error("Lỗi getNewArrivals:", error);
+        res.status(500).json({ message: 'Lỗi server khi lấy sách mới' });
+    }
+};
+exports.getAllBooks = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 12; 
+        const offset = (page - 1) * limit;
+        
+        const search = req.query.search || '';
+        const categoryId = req.query.category_id || null;
+        const priceRange = req.query.price_range || null; 
+        const sortBy = req.query.sort_by || 'newest';
+
+        let query = `
+            SELECT DISTINCT s.id, s.ten_sach, s.gia_ban, s.gia_giam, s.hinh_anh,
+            (SELECT tg.ten_tac_gia FROM sach_tac_gia stg JOIN tac_gia tg ON stg.tac_gia_id = tg.id WHERE stg.sach_id = s.id LIMIT 1) AS author
+            FROM sach s
+            LEFT JOIN sach_danh_muc sdm ON s.id = sdm.sach_id
+            WHERE s.trang_thai = 'hien_thi'
+        `;
+        
+        let countQuery = `SELECT COUNT(DISTINCT s.id) as total FROM sach s LEFT JOIN sach_danh_muc sdm ON s.id = sdm.sach_id WHERE s.trang_thai = 'hien_thi'`;
+        let queryParams = [];
+
+        if (search) {
+            const searchPart = ` AND s.ten_sach LIKE ?`;
+            query += searchPart;
+            countQuery += searchPart;
+            queryParams.push(`%${search}%`);
+        }
+
+        if (categoryId && categoryId !== 'all') {
+            const catPart = ` AND sdm.danh_muc_id = ?`;
+            query += catPart;
+            countQuery += catPart;
+            queryParams.push(categoryId);
+        }
+
+        if (priceRange) {
+            let pricePart = '';
+            if (priceRange === 'under-100') pricePart = ` AND (CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) < 100000`;
+            else if (priceRange === '100-300') pricePart = ` AND (CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) BETWEEN 100000 AND 300000`;
+            else if (priceRange === 'above-300') pricePart = ` AND (CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) > 300000`;
+            
+            query += pricePart;
+            countQuery += pricePart;
+        }
+
+        switch (sortBy) {
+            case 'price-asc': query += ` ORDER BY (CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) ASC`; break;
+            case 'price-desc': query += ` ORDER BY (CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) DESC`; break;
+            case 'best-seller': query += ` ORDER BY (SELECT SUM(so_luong) FROM don_hang_chi_tiet WHERE sach_id = s.id) DESC`; break;
+            default: query += ` ORDER BY s.created_at DESC`;
+        }
+
+        query += ` LIMIT ? OFFSET ?`;
+        const finalParams = [...queryParams, limit, offset];
+
+        const [rows] = await pool.query(query, finalParams);
+        const [countResult] = await pool.query(countQuery, queryParams);
+        
+        const total = countResult[0].total;
+
+        res.json({
+            success: true,
+            data: rows,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Lỗi server khi lấy danh sách sản phẩm' });
+    }
+};
