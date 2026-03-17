@@ -267,3 +267,46 @@ exports.changePassword = async (req, res) => {
         res.status(500).json({ message: 'Lỗi server.' });
     }
 };
+// LẤY TẤT CẢ KHÁCH HÀNG (Dành cho Admin)
+exports.getAllUsers = async (req, res) => {
+    try {
+        const [rows] = await pool.execute(
+            `SELECT id, ho_ten, email, so_dien_thoai, role, trang_thai, created_at 
+            FROM nguoi_dung 
+            WHERE deleted_at IS NULL 
+            ORDER BY created_at DESC`
+        );
+        res.json({ success: true, data: rows });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi server khi lấy danh sách user' });
+    }
+};
+
+// KHÓA/MỞ KHÓA TÀI KHOẢN
+exports.updateUserStatus = async (req, res) => {
+    const { id } = req.params;
+    const { trang_thai } = req.body; 
+    try {
+        await pool.execute(
+            'UPDATE nguoi_dung SET trang_thai = ? WHERE id = ?',
+            [trang_thai, id]
+        );
+        res.json({ success: true, message: 'Cập nhật trạng thái thành công!' });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi server' });
+    }
+};
+
+// XÓA MỀM USER
+exports.deleteUser = async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.execute(
+            'UPDATE nguoi_dung SET deleted_at = NOW() WHERE id = ?',
+            [id]
+        );
+        res.json({ success: true, message: 'Xóa người dùng thành công!' });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi server' });
+    }
+};

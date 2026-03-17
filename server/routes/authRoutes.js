@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { register, login, googleLogin, getMe,updateProfile, changePassword, verifyEmail } = require('../controllers/authController');
+const { getAllUsers, updateUserStatus, deleteUser } = require('../controllers/authController');
 const { upload, uploadAvatar, getAddresses, addAddress, deleteAddress } = require('../controllers/userController');
-const { protect } = require('../middlewares/auth');
+const { protect, admin } = require('../middlewares/auth');
 
 router.post('/register', register);
 router.post('/login', login);
@@ -19,4 +20,8 @@ router.get('/addresses', protect, getAddresses);
 router.post('/addresses', protect, addAddress);
 router.delete('/addresses/:id', protect, deleteAddress);
 
+
+router.get('/admin/users', protect, admin, getAllUsers);
+router.put('/admin/users/:id/status', protect, admin, updateUserStatus);
+router.delete('/admin/users/:id', protect, admin, deleteUser);
 module.exports = router;

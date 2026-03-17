@@ -24,6 +24,7 @@ import BookManager from './admin/pages/BookManager';
 import CategoryManager from './admin/pages/CategoryManager';
 import AuthorManager from './admin/pages/AuthorManager';
 import PublisherManager from './admin/pages/PublisherManager';
+import CustomerManager from './admin/pages/CustomerManager';
 
 
 function App() {
@@ -61,6 +62,7 @@ function App() {
           <Route path="categories" element={<CategoryManager />} />
           <Route path="authors" element={<AuthorManager />} />
           <Route path="publishers" element={<PublisherManager />} />
+          <Route path="customers" element={<CustomerManager />} />
         </Route>
       </Routes>
     </>

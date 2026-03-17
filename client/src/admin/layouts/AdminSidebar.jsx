@@ -19,7 +19,7 @@ const AdminSidebar = () => {
         { title: 'Tác giả', icon: faUserPen, path: '/admin/authors' },
         { title: 'Nhà xuất bản', icon: faBuilding, path: '/admin/publishers' },
         { title: 'Đơn hàng', icon: faShoppingCart, path: '/admin/orders' },
-        { title: 'Khách hàng', icon: faUsers, path: '/admin/users' },
+        { title: 'Khách hàng', icon: faUsers, path: '/admin/customers' },
         { title: 'Đánh giá', icon: faStar, path: '/admin/reviews' },
         { title: 'Banner', icon: faImage, path: '/admin/banners' },
     ];
