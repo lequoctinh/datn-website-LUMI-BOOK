@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './css/BestSellerBooks.css';
 import bookService from '../../../services/bookService';
+import { useCart } from '../../../context/cartContext';
 
 const BestSellerBooks = () => {
   const navigate = useNavigate(); 
+  const { addToCart } = useCart();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [addingId, setAddingId] = useState(null);
 
   useEffect(() => {
     const fetchBestSellers = async () => {
@@ -29,9 +32,17 @@ const BestSellerBooks = () => {
     window.scrollTo(0, 0); 
   };
 
-  const handleAddToCart = (e) => {
+  const handleAddToCart = async (e, book) => {
     e.stopPropagation();
-    console.log("Thêm vào giỏ hàng!");
+    
+    if (book.so_luong_ton <= 0) return;
+
+    setAddingId(book.id);
+    try {
+      await addToCart(book.id, 1);
+    } finally {
+      setTimeout(() => setAddingId(null), 500);
+    }
   };
 
 return (
@@ -60,6 +71,7 @@ return (
               const isDiscounted = book.gia_giam > 0 && book.gia_giam < book.gia_ban;
               const percentDiscount = isDiscounted ? Math.round(((book.gia_ban - book.gia_giam) / book.gia_ban) * 100) : 0;
               const currentPrice = isDiscounted ? book.gia_giam : book.gia_ban;
+              const isItemAdding = addingId === book.id;
 
               return (
                 <div 
@@ -121,10 +133,11 @@ return (
                       </div>
                       
                       <button 
-                        onClick={handleAddToCart}
-                        className="ln-btn-cart"
+                        onClick={(e) => handleAddToCart(e, book)}
+                        disabled={book.so_luong_ton <= 0 || isItemAdding}
+                        className={`ln-btn-cart ${isItemAdding ? 'opacity-70' : ''}`}
                       >
-                        <i className="fa-solid fa-cart-shopping"></i>
+                        <i className={`fa-solid ${isItemAdding ? 'fa-spinner fa-spin' : 'fa-cart-shopping'}`}></i>
                       </button>
                     </div>
                   </div>

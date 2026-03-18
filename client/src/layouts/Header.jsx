@@ -8,6 +8,7 @@ import {
     faSignOutAlt,faTachometerAlt
 } from "@fortawesome/free-solid-svg-icons";
 import { useUser } from "../context/UserContext";
+import { useCart } from "../context/cartContext";
 import './css/Header.css';
 
 const CATEGORIES = [
@@ -24,6 +25,7 @@ const CATEGORIES = [
 function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const { user, logout } = useUser();
+    const { cartItems } = useCart();
     const menuRef = useRef(null);
 
     useEffect(() => {
@@ -126,12 +128,14 @@ function Header() {
                     <div className="w-[1px] h-8 bg-gray-300/50"></div>
 
                     <Link to="/cart" className="relative cursor-pointer group flex items-center justify-center w-12 h-12 transition-all duration-300">
-                <div className="w-10 h-10 flex items-center justify-center text-text-primary group-hover:text-brand-primary transition-colors">
-                    <FontAwesomeIcon icon={faShoppingCart} className="text-2xl" />
-                </div>
-                <span className="cart-badge absolute top-1 right-1 w-5 h-5 bg-accent-primary text-white text-[10px] rounded-full flex items-center justify-center font-bold shadow-md animate-bounce-short ring-2 ring-background">
-                    2
-                </span>
+                        <div className="w-10 h-10 flex items-center justify-center text-text-primary group-hover:text-brand-primary transition-colors">
+                            <FontAwesomeIcon icon={faShoppingCart} className="text-2xl" />
+                        </div>
+                        {cartItems.length > 0 && (
+                            <span className="cart-badge absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1 bg-accent-primary text-white text-[10px] rounded-full flex items-center justify-center font-black shadow-md animate-bounce-short ring-2 ring-white">
+                                {cartItems.length}
+                            </span>
+                        )}
                     </Link>
                 </div>
             </div>
