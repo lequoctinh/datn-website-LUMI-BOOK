@@ -11,6 +11,7 @@ const authRoutes = require('./routes/authRoutes');
 const bookRoutes = require('./routes/bookRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const authorRoutes = require('./routes/authorRoutes');
+const cartRoutes = require('./routes/cartRoutes');
 const publisherRoutes = require('./routes/publisherRoutes');
 
 // Config
@@ -29,6 +30,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/authors', authorRoutes);
+app.use('/api/cart', cartRoutes);
 app.use('/api/publishers', publisherRoutes);
 
 // Root route
