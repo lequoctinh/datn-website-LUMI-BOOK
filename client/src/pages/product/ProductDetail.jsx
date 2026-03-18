@@ -4,10 +4,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faCartPlus, faTruck, faShield, faRotateLeft, faPlus, faMinus, faTags, faLanguage, faBookOpen, faRulerCombined, faBookAtlas, faCalendarAlt, faStore, faChevronRight, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
 import bookService from '../../services/bookService';
+import { useCart } from '../../context/cartContext';
 
 const ProductDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const [isAdding, setIsAdding] = useState(false);
+    const { addToCart } = useCart();
     const [book, setBook] = useState(null);
     const [relatedBooks, setRelatedBooks] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -49,6 +52,32 @@ const ProductDetail = () => {
         setQuantity(1);
     }, [id, navigate]);
 
+    const handleAddToCart = async () => {
+        if (!book || book.so_luong_ton <= 0) {
+            toast.error("Sản phẩm đã hết hàng");
+            return;
+        }
+
+        setIsAdding(true);
+        try {
+            await addToCart(book.id, quantity);
+        } finally {
+            setIsAdding(false);
+        }
+    };
+
+    const handleBuyNow = async () => {
+        if (!book || book.so_luong_ton <= 0) return;
+        
+        setIsAdding(true);
+        try {
+            await addToCart(book.id, quantity);
+            navigate('/cart');
+        } finally {
+            setIsAdding(false);
+        }
+    };
+
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
             <div className="w-16 h-16 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
@@ -66,14 +95,7 @@ const ProductDetail = () => {
     const authors = book.tac_gia?.map(t => t.ten_tac_gia).join(', ') || 'Đang cập nhật';
     const categories = book.danh_muc?.map(c => c.ten_danh_muc).join(', ') || 'Đang cập nhật';
 
-    const handleAddToCart = () => {
-        toast.success(`Đã thêm ${quantity} cuốn vào giỏ hàng!`);
-    };
-
-    const handleBuyNow = () => {
-        handleAddToCart();
-        navigate('/checkout');
-    };
+    
 
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
@@ -194,10 +216,19 @@ const ProductDetail = () => {
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-auto">
-                            <button onClick={handleAddToCart} disabled={book.so_luong_ton <= 0} className={`py-4 rounded-xl font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 border-2 ${book.so_luong_ton > 0 ? 'bg-white border-brand-primary text-brand-primary hover:bg-brand-primary/5 active:scale-95' : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'}`}>
-                                <FontAwesomeIcon icon={faCartPlus} className="text-xl" /> Thêm vào giỏ
+                        <button 
+                                onClick={handleAddToCart} 
+                                disabled={book.so_luong_ton <= 0 || isAdding} 
+                                className={`py-4 rounded-xl font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 border-2 ${book.so_luong_ton > 0 ? 'bg-white border-brand-primary text-brand-primary hover:bg-brand-primary/5 active:scale-95' : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'}`}
+                            >
+                                <FontAwesomeIcon icon={isAdding ? faRotateLeft : faCartPlus} className={`text-xl ${isAdding ? 'animate-spin' : ''}`} /> 
+                                {isAdding ? 'Đang xử lý...' : 'Thêm vào giỏ'}
                             </button>
-                            <button onClick={handleBuyNow} disabled={book.so_luong_ton <= 0} className={`py-4 rounded-xl font-black uppercase tracking-widest transition-all duration-300 shadow-lg ${book.so_luong_ton > 0 ? 'bg-brand-primary text-white hover:bg-brand-dark shadow-brand-primary/30 active:scale-95' : 'bg-gray-300 text-white cursor-not-allowed shadow-none'}`}>
+                            <button 
+                                onClick={handleBuyNow} 
+                                disabled={book.so_luong_ton <= 0 || isAdding} 
+                                className={`py-4 rounded-xl font-black uppercase tracking-widest transition-all duration-300 shadow-lg ${book.so_luong_ton > 0 ? 'bg-brand-primary text-white hover:bg-brand-dark active:scale-95' : 'bg-gray-300 text-white cursor-not-allowed shadow-none'}`}
+                            >
                                 Mua ngay
                             </button>
                         </div>

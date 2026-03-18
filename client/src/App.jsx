@@ -18,6 +18,7 @@ import ProductDetail from "./pages/product/ProductDetail";
 import ProductList from "./pages/product/ProductList";
 import Contact from './pages/contact/Contact';
 
+import { CartProvider } from './context/cartContext';
 
 import Dashboard from './admin/pages/Dashboard';
 import BookManager from './admin/pages/BookManager';
@@ -29,8 +30,8 @@ import CustomerManager from './admin/pages/CustomerManager';
 
 function App() {
   return (
-    <>
-      <ToastContainer 
+    <CartProvider>
+           <ToastContainer 
       position="top-right" autoClose={3000} 
       hideProgressBar={false} 
       newestOnTop={false} 
@@ -65,7 +66,9 @@ function App() {
           <Route path="customers" element={<CustomerManager />} />
         </Route>
       </Routes>
-    </>
+  </CartProvider>
+ 
+    
   );
 }
 

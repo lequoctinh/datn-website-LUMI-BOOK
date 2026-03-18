@@ -8,9 +8,8 @@ router.use(protect);
 router.get('/', cartController.getCart);
 router.post('/add', cartController.addToCart);
 
-// Sửa lại tên hàm cho đúng với Controller bạn đã gửi
-router.put('/update', cartController.updateCartQuantity); 
-router.delete('/:id', cartController.removeCartItem);
+router.put('/update/:id', cartController.updateCart);
+router.delete('/:id', cartController.removeFromCart);
 router.delete('/clear/all', cartController.clearCart);
 
 module.exports = router;

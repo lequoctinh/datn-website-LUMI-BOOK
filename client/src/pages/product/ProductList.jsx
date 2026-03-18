@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faFilter, faSortAmountDown, faCartPlus } from '@fortawesome/free-solid-svg-icons';
 import bookService from '../../services/bookService';
 import categoryService from '../../services/categoryService';
+import { useCart } from '../../context/cartContext';
 
 const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -21,6 +22,7 @@ const prices = [
 
 const ProductList = () => {
     const navigate = useNavigate();
+    const { addToCart } = useCart();
     const [books, setBooks] = useState([]);
     const [categories, setCategories] = useState([{ id: 'all', ten_danh_muc: "Tất cả" }]);
     const [loading, setLoading] = useState(true);
@@ -69,6 +71,11 @@ const ProductList = () => {
 
     const handleFilterChange = (key, value) => {
         setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
+    };
+
+    const handleAddToCart = (e, book) => {
+        e.stopPropagation();
+        addToCart(book.id, 1);
     };
 
     return (
@@ -180,21 +187,21 @@ const ProductList = () => {
                                           />
                                           
                                           <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                              <button 
-                                                  onClick={(e) => e.stopPropagation()}
-                                                  className="w-10 h-10 bg-white text-brand-primary rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300 shadow-lg"
-                                                  title="Thêm vào giỏ"
-                                              >
-                                                  <FontAwesomeIcon icon={faCartPlus} />
-                                              </button>
-                                              <button 
-                                                  onClick={() => navigate(`/product/${book.id}`)}
-                                                  className="w-10 h-10 bg-white text-brand-primary rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300 delay-75 shadow-lg"
-                                                  title="Xem chi tiết"
-                                              >
-                                                  <FontAwesomeIcon icon={faSearch} />
-                                              </button>
-                                          </div>
+                                            <button 
+                                                onClick={(e) => handleAddToCart(e, book)}
+                                                className="w-10 h-10 bg-white text-brand-primary rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300 shadow-lg"
+                                                title="Thêm vào giỏ"
+                                            >
+                                                <FontAwesomeIcon icon={faCartPlus} />
+                                            </button>
+                                            <button 
+                                                onClick={() => navigate(`/product/${book.id}`)}
+                                                className="w-10 h-10 bg-white text-brand-primary rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300 delay-75 shadow-lg"
+                                                title="Xem chi tiết"
+                                            >
+                                                <FontAwesomeIcon icon={faSearch} />
+                                            </button>
+                                        </div>
                                           {book.gia_giam > 0 && (
                                               <div className="absolute top-2 left-2 bg-accent-primary text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-md">
                                                   -{Math.round(((book.gia_ban - book.gia_giam) / book.gia_ban) * 100)}%

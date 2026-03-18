@@ -2,11 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import bookService from '../../../services/bookService';
 import './css/NewArrivals.css';
+import { useCart } from '../../../context/cartContext';
 
 const NewArrivals = () => {
+    const navigate = useNavigate();
+    const { addToCart } = useCart();
+    const [addingId, setAddingId] = useState(null);
     const [books, setBooks] = useState([]);
     const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
+
 
     useEffect(() => {
         const fetchNewBooks = async () => {
@@ -23,6 +27,19 @@ const NewArrivals = () => {
         };
         fetchNewBooks();
     }, []);
+
+    const handleAddToCart = async (e, book) => {
+        e.stopPropagation();
+        
+        if (book.so_luong_ton <= 0) return;
+    
+        setAddingId(book.id);
+        try {
+          await addToCart(book.id, 1);
+        } finally {
+          setTimeout(() => setAddingId(null), 500);
+        }
+      };
 
     const formatPrice = (price) => {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -49,7 +66,9 @@ const NewArrivals = () => {
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 gap-y-12 ln-perspective">
-                    {books.map((book) => (
+                    {books.map((book) =>{
+                        const isItemAdding = addingId === book.id;
+                        return (
                         <div key={book.id} className="ln-card rounded-2xl p-4 flex flex-col h-[480px]">
                             <div className="ln-ribbon-mark">
                                 <i className="fa-solid fa-star"></i>
@@ -105,13 +124,18 @@ const NewArrivals = () => {
                                         </span>
                                     </div>
 
-                                    <button className="ln-btn-cart">
-                                        <i className="fa-solid fa-cart-shopping"></i>
+                                    <button 
+                                        onClick={(e) => handleAddToCart(e, book)}
+                                        disabled={book.so_luong_ton <= 0 || isItemAdding}
+                                        className={`ln-btn-cart ${isItemAdding ? 'opacity-70' : ''}`}
+                                    >
+                                        <i className={`fa-solid ${isItemAdding ? 'fa-spinner fa-spin' : 'fa-cart-shopping'}`}></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                    ))}
+                        );
+                      })}
                 </div>
 
                 <div className="mt-16 text-center">
