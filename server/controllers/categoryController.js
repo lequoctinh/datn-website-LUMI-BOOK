@@ -2,7 +2,7 @@ const { pool } = require('../config/db');
 
 exports.getAllCategories = async (req, res) => {
     try {
-        const [rows] = await pool.execute('SELECT * FROM danh_muc ORDER BY created_at DESC');
+        const [rows] = await pool.execute('SELECT * FROM danh_muc ORDER BY id ASC');
         res.json({ success: true, data: rows });
     } catch (error) {
         res.status(500).json({ message: 'Lỗi khi lấy danh sách danh mục' });

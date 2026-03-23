@@ -17,6 +17,12 @@ import Checkout from "./pages/checkout/Checkout";
 import ProductDetail from "./pages/product/ProductDetail";
 import ProductList from "./pages/product/ProductList";
 import Contact from './pages/contact/Contact';
+import LiteraryBooks from './pages/ProductsCategory/LiteraryBooks';
+import EconomyBooks from './pages/ProductsCategory/EconomyBooks';
+import ChildrenBooks from './pages/ProductsCategory/ChildrenBooks'; 
+import LanguageBooks from './pages/ProductsCategory/LanguageBooks';
+import BiographyBooks from './pages/ProductsCategory/BiographyBooks';
+import MentalityBooks from './pages/ProductsCategory/MentalityBooks';
 
 import { CartProvider } from './context/cartContext';
 
@@ -28,10 +34,11 @@ import PublisherManager from './admin/pages/PublisherManager';
 import CustomerManager from './admin/pages/CustomerManager';
 
 
+
 function App() {
   return (
     <CartProvider>
-           <ToastContainer 
+      <ToastContainer 
       position="top-right" autoClose={3000} 
       hideProgressBar={false} 
       newestOnTop={false} 
@@ -54,6 +61,12 @@ function App() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/products" element={<ProductList />} />
+          <Route path="/category/literature" element={<LiteraryBooks />} />
+          <Route path="/category/economy" element={<EconomyBooks/>} />
+          <Route path="/category/children" element={<ChildrenBooks />} />
+          <Route path="/category/language" element={<LanguageBooks />} />
+          <Route path="/category/biography" element={<BiographyBooks />} />
+          <Route path="/category/mentality" element={<MentalityBooks />} />
           <Route path="/contact" element={<Contact />} />
         </Route>
 
