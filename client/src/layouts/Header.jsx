@@ -12,12 +12,12 @@ import { useCart } from "../context/cartContext";
 import './css/Header.css';
 
 const CATEGORIES = [
-    { id: 1, name: "Sách Văn Học", icon: faBookOpen, desc: "Tiểu thuyết, Tản văn" },
-    { id: 2, name: "Kinh Tế - Làm Giàu", icon: faChartLine, desc: "Bài học kinh doanh" },
-    { id: 3, name: "Thiếu Nhi", icon: faChild, desc: "Truyện tranh, Giáo dục" },
-    { id: 4, name: "Ngoại Ngữ", icon: faGlobe, desc: "Tiếng Anh, Nhật, Trung" },
-    { id: 5, name: "Tiểu Sử - Hồi Ký", icon: faFeather, desc: "Danh nhân thế giới" },
-    { id: 6, name: "Tâm Lý - Kỹ Năng", icon: faBrain, desc: "Phát triển bản thân" },
+    { id: 1, name: "Sách Văn Học", icon: faBookOpen, desc: "Tiểu thuyết, Tản văn" , path:"/category/literature"},
+    { id: 2, name: "Kinh Tế - Làm Giàu", icon: faChartLine, desc: "Bài học kinh doanh",path:"/category/economy" },
+    { id: 3, name: "Thiếu Nhi", icon: faChild, desc: "Truyện tranh, Giáo dục",path:"/category/children"},
+    { id: 4, name: "Ngoại Ngữ", icon: faGlobe, desc: "Tiếng Anh, Nhật, Trung", path:"/category/language" },
+    { id: 5, name: "Tiểu Sử - Hồi Ký", icon: faFeather, desc: "Danh nhân thế giới", path:"/category/biography" },
+    { id: 6, name: "Tâm Lý - Kỹ Năng", icon: faBrain, desc: "Phát triển bản thân" , path:"/category/mentality" },
     { id: 7, name: "Cẩm Nang Đời Sống", icon: faLightbulb, desc: "Mẹo hay, Nấu ăn" },
     { id: 8, name: "Thể Loại Khác", icon: faEllipsisH, desc: "Tạp chí, Lịch sử" },
 ];
@@ -43,7 +43,7 @@ function Header() {
             <div className="container mx-auto px-4 py-2 flex justify-between items-center text-sm border-b border-black/5">
                 <div className="text-gray-500 font-body">
                     <FontAwesomeIcon icon={faPhone} className="mr-2 text-brand-primary" />
-                    Hotline: <span className="font-semibold text-brand-primary">1900 6789</span>
+                    Hotline: <span className="font-semibold text-brand-primary">0357699792</span>
                 </div>
                 <div className="flex gap-6 text-gray-500 font-body text-xs uppercase tracking-wider">
                 <Link to="/contact" className="cursor-pointer hover:text-brand-primary transition-colors">Liên Hệ</Link>
@@ -157,9 +157,11 @@ function Header() {
                                 <div className="absolute top-full left-0 w-[900px] bg-white shadow-2xl rounded-b-xl border-t-2 border-brand-primary animate-fade-in-down overflow-hidden z-[1002]">
                                     <div className="grid grid-cols-4 gap-4 p-6 bg-background/30">
                                         {CATEGORIES.map((cat) => (
-                                            <div 
+                                            <Link 
+                                                to={cat.path} 
                                                 key={cat.id} 
-                                                className="group/item flex items-start gap-4 p-4 bg-white rounded-lg border border-transparent hover:border-brand-light/50 hover:shadow-hover cursor-pointer transition-all duration-300"
+                                                onClick={() => setIsMenuOpen(false)} 
+                                                className="group/item flex items-start gap-4 p-4 bg-white rounded-lg border border-transparent hover:border-brand-light/50 hover:shadow-hover cursor-pointer transition-all duration-300 decoration-transparent"
                                             >
                                                 <div className="w-10 h-10 rounded-full bg-brand-light/10 text-brand-primary flex items-center justify-center group-hover/item:bg-brand-primary group-hover/item:text-white transition-colors duration-300">
                                                     <FontAwesomeIcon icon={cat.icon} />
@@ -172,7 +174,7 @@ function Header() {
                                                         {cat.desc}
                                                     </p>
                                                 </div>
-                                            </div>
+                                            </Link>
                                         ))}
                                     </div>
                                     <Link to="/products" className="block"> 
