@@ -100,9 +100,9 @@ function Header() {
                                 <Link to="/profile" className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700 font-medium flex items-center gap-2 block">
                                     <FontAwesomeIcon icon={faUser} className="text-gray-400 w-4" /> Thông tin cá nhân
                                 </Link>
-                                <div className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700 font-medium flex items-center gap-2">
+                                <Link to="/order-history" className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700 font-medium flex items-center gap-2 block">
                                     <FontAwesomeIcon icon={faShoppingCart} className="text-gray-400 w-4" /> Đơn hàng của tôi
-                                </div>
+                                </Link>
                                 
                                 <div className="border-t border-gray-100 my-1"></div>
                                 <div 
@@ -191,7 +191,11 @@ function Header() {
                                 <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse"></span>
                                 Sách Mới
                             </li>
-                            <li className="cursor-pointer text-accent-primary hover:text-accent-hover transition-colors">Tra cứu đơn hàng</li>
+                            <li>
+                                <Link to="/order-history" className="cursor-pointer text-accent-primary hover:text-accent-hover transition-colors">
+                                    Tra cứu đơn hàng
+                                </Link>
+                            </li>
                         </ul>
                     </div>
                 </div>
