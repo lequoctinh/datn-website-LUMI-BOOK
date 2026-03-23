@@ -26,6 +26,8 @@ import CategoryManager from './admin/pages/CategoryManager';
 import AuthorManager from './admin/pages/AuthorManager';
 import PublisherManager from './admin/pages/PublisherManager';
 import CustomerManager from './admin/pages/CustomerManager';
+import OrderHistory from './pages/order/OrderHistory';
+import OrderDetail from './pages/order/OrderDetail';
 
 
 function App() {
@@ -55,6 +57,8 @@ function App() {
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/products" element={<ProductList />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/order-history" element={<OrderHistory />} />
+          <Route path="/order-history/:id" element={<OrderDetail />} />
         </Route>
 
           <Route path="/admin" element={<AdminLayout />}>
