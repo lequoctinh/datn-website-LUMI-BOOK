@@ -13,7 +13,7 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const authorRoutes = require('./routes/authorRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const publisherRoutes = require('./routes/publisherRoutes');
-
+const checkoutRoutes = require('./routes/checkoutRoutes');
 // Config
 connectDB();
 
@@ -32,7 +32,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/authors', authorRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/publishers', publisherRoutes);
-
+app.use('/api/checkout',checkoutRoutes);
 // Root route
 app.get('/', (req, res) => {
     res.send('API Lumi Book is running...');
