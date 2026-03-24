@@ -1,24 +1,79 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronRight, faMapMarkerAlt, faCreditCard, faTruck, faShieldAlt } from '@fortawesome/free-solid-svg-icons';
+import { faChevronRight, faMapMarkerAlt, faCreditCard, faShieldAlt } from '@fortawesome/free-solid-svg-icons';
+import axiosClient from '../../utils/axiosClient';
 
 const Checkout = () => {
+  const navigate = useNavigate();
+  const [cartItems, setCartItems] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    ho_ten_nhan: '',
+    sdt_nhan: '',
+    dia_chi_nhan: '',
+    ghi_chu: ''
+  });
 
+  useEffect(() => {
+    const fetchCart = async () => {
+      try {
+        const response = await axiosClient.get('/cart');
+        setCartItems(response.data || []);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchCart();
+  }, []);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const calculateSubtotal = () => {
+    return cartItems.reduce((total, item) => total + (item.gia_ban * item.so_luong), 0);
+  };
+
+  const shippingFee = 0;
+  const subtotal = calculateSubtotal();
+  const totalAmount = subtotal + shippingFee;
+
+  const handleSubmit = async () => {
+    if (!formData.ho_ten_nhan || !formData.sdt_nhan || !formData.dia_chi_nhan) {
+      alert("Vui lòng điền đầy đủ thông tin giao hàng");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = {
+        ...formData,
+        phuong_thuc_thanh_toan: paymentMethod
+      };
+      const response = await axiosClient.post('/checkout/place-order', payload);
+      if (response.success) {
+        navigate('/order-success', { state: { orderId: response.orderId } });
+      }
+    } catch (error) {
+      alert(error.message || "Đặt hàng thất bại");
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="min-h-screen bg-background py-10 px-4 sm:px-6 lg:px-8 font-body">
       <div className="max-w-6xl mx-auto">
-        {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-text-secondary mb-8">
-          <span className="hover:text-brand-primary cursor-pointer">Giỏ hàng</span>
+          <span className="hover:text-brand-primary cursor-pointer" onClick={() => navigate('/cart')}>Giỏ hàng</span>
           <FontAwesomeIcon icon={faChevronRight} className="text-[10px]" />
           <span className="text-text-primary font-bold">Thanh toán</span>
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* CỘT TRÁI: THÔNG TIN GIAO HÀNG */}
           <div className="lg:col-span-8 space-y-6">
-            {/* 1. Địa chỉ giao hàng */}
             <section className="bg-surface p-6 rounded-2xl shadow-card border border-border-light">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-8 h-8 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary">
@@ -30,24 +85,51 @@ const Checkout = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-text-secondary">Họ và tên</label>
-                  <input type="text" placeholder="Nguyễn Văn A" className="w-full px-4 py-2 rounded-lg border border-border-default focus:border-brand-primary outline-none transition-all" />
+                  <input 
+                    type="text" 
+                    name="ho_ten_nhan"
+                    value={formData.ho_ten_nhan}
+                    onChange={handleInputChange}
+                    placeholder="Nguyễn Văn A" 
+                    className="w-full px-4 py-2 rounded-lg border border-border-default focus:border-brand-primary outline-none transition-all" 
+                  />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-text-secondary">Số điện thoại</label>
-                  <input type="tel" placeholder="090..." className="w-full px-4 py-2 rounded-lg border border-border-default focus:border-brand-primary outline-none transition-all" />
+                  <input 
+                    type="tel" 
+                    name="sdt_nhan"
+                    value={formData.sdt_nhan}
+                    onChange={handleInputChange}
+                    placeholder="090..." 
+                    className="w-full px-4 py-2 rounded-lg border border-border-default focus:border-brand-primary outline-none transition-all" 
+                  />
                 </div>
                 <div className="md:col-span-2 space-y-2">
                   <label className="text-sm font-semibold text-text-secondary">Địa chỉ nhận hàng</label>
-                  <input type="text" placeholder="Số nhà, tên đường, Phường/Xã..." className="w-full px-4 py-2 rounded-lg border border-border-default focus:border-brand-primary outline-none transition-all" />
+                  <input 
+                    type="text" 
+                    name="dia_chi_nhan"
+                    value={formData.dia_chi_nhan}
+                    onChange={handleInputChange}
+                    placeholder="Số nhà, tên đường, Phường/Xã..." 
+                    className="w-full px-4 py-2 rounded-lg border border-border-default focus:border-brand-primary outline-none transition-all" 
+                  />
                 </div>
                 <div className="md:col-span-2 space-y-2">
                   <label className="text-sm font-semibold text-text-secondary">Ghi chú (Tùy chọn)</label>
-                  <textarea rows="2" placeholder="Ví dụ: Giao giờ hành chính..." className="w-full px-4 py-2 rounded-lg border border-border-default focus:border-brand-primary outline-none transition-all"></textarea>
+                  <textarea 
+                    rows="2" 
+                    name="ghi_chu"
+                    value={formData.ghi_chu}
+                    onChange={handleInputChange}
+                    placeholder="Ví dụ: Giao giờ hành chính..." 
+                    className="w-full px-4 py-2 rounded-lg border border-border-default focus:border-brand-primary outline-none transition-all"
+                  ></textarea>
                 </div>
               </div>
             </section>
 
-            {/* 2. Phương thức thanh toán */}
             <section className="bg-surface p-6 rounded-2xl shadow-card border border-border-light">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-8 h-8 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary">
@@ -55,7 +137,6 @@ const Checkout = () => {
                 </div>
                 <h2 className="font-heading text-xl text-text-primary">Phương thức thanh toán</h2>
               </div>
-
               <div className="space-y-3">
                 <label className={`flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'cod' ? 'border-brand-primary bg-brand-primary/5' : 'border-border-light hover:bg-background'}`}>
                   <div className="flex items-center gap-4">
@@ -67,58 +148,51 @@ const Checkout = () => {
                   </div>
                   <img src="https://cdn-icons-png.flaticon.com/512/6491/6491490.png" className="w-8 h-8 opacity-70" alt="cod" />
                 </label>
-
-                <label className={`flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'vnpay' ? 'border-brand-primary bg-brand-primary/5' : 'border-border-light hover:bg-background'}`}>
-                  <div className="flex items-center gap-4">
-                    <input type="radio" name="payment" checked={paymentMethod === 'vnpay'} onChange={() => setPaymentMethod('vnpay')} className="accent-brand-primary w-4 h-4" />
-                    <div>
-                      <p className="font-semibold text-text-primary">Thanh toán qua VNPay</p>
-                      <p className="text-xs text-text-secondary italic">Cổng thanh toán an toàn qua Ngân hàng / QR Code.</p>
-                    </div>
-                  </div>
-                  <img src="https://vnpay.vn/s1/statics.vnpay.vn/2023/6/0ox Nolan x0idun861686814146087.png" className="w-12 h-4 object-contain" alt="vnpay" />
-                </label>
               </div>
             </section>
           </div>
-
-          {/* CỘT PHẢI: TÓM TẮT ĐƠN HÀNG */}
           <div className="lg:col-span-4">
             <div className="bg-surface p-6 rounded-2xl shadow-card border border-border-light sticky top-24">
               <h2 className="font-heading text-xl text-text-primary mb-6 border-b border-border-light pb-4">Đơn hàng của bạn</h2>
               
-              {/* List sản phẩm tóm tắt */}
-              <div className="max-h-48 overflow-y-auto mb-6 pr-2 custom-scrollbar">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="relative">
-                    <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=600" className="w-12 h-16 object-cover rounded shadow-sm" alt="product" />
-                    <span className="absolute -top-2 -right-2 bg-text-secondary text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-surface">1</span>
+              <div className="max-h-64 overflow-y-auto mb-6 pr-2 custom-scrollbar">
+                {cartItems.map((item) => (
+                  <div key={item.id} className="flex items-center gap-3 mb-4">
+                    <div className="relative">
+                      <img src={item.hinh_anh} className="w-12 h-16 object-cover rounded shadow-sm" alt={item.ten_sach} />
+                      <span className="absolute -top-2 -right-2 bg-text-secondary text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-surface">
+                        {item.so_luong}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate">{item.ten_sach}</p>
+                      <p className="text-xs text-text-secondary">{Number(item.gia_ban).toLocaleString()} đ</p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate">Nhà Giả Kim</p>
-                    <p className="text-xs text-text-secondary">79.000 đ</p>
-                  </div>
-                </div>
+                ))}
               </div>
 
-              {/* Tính tiền */}
               <div className="space-y-3 pt-4 border-t border-border-light text-sm">
                 <div className="flex justify-between text-text-secondary">
                   <span>Tạm tính</span>
-                  <span>329.000 đ</span>
+                  <span>{subtotal.toLocaleString()} đ</span>
                 </div>
                 <div className="flex justify-between text-text-secondary pb-4 border-b border-border-light">
                   <span>Phí vận chuyển</span>
-                  <span>30.000 đ</span>
+                  <span className="font-medium text-state-success">Miễn phí toàn quốc</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold pt-2">
                   <span className="text-text-primary">Tổng tiền</span>
-                  <span className="text-accent-primary">359.000 đ</span>
+                  <span className="text-accent-primary">{totalAmount.toLocaleString()} đ</span>
                 </div>
               </div>
 
-              <button className="w-full mt-8 bg-accent-primary hover:bg-accent-hover text-white font-bold py-4 rounded-xl transition-all shadow-md active:scale-95 text-center uppercase tracking-wider">
-                Xác nhận thanh toán
+              <button 
+                onClick={handleSubmit}
+                disabled={loading || cartItems.length === 0}
+                className="w-full mt-8 bg-accent-primary hover:bg-accent-hover disabled:bg-gray-400 text-white font-bold py-4 rounded-xl transition-all shadow-md active:scale-95 text-center uppercase tracking-wider"
+              >
+                {loading ? 'Đang xử lý...' : 'Xác nhận thanh toán'}
               </button>
 
               <div className="mt-4 flex items-center justify-center gap-2 text-xs text-state-success font-medium">

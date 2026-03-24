@@ -1,6 +1,7 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import MainLayout from './layouts';
 import AdminLayout from './admin/layouts/AdminLayout';
@@ -17,6 +18,11 @@ import Checkout from "./pages/checkout/Checkout";
 import ProductDetail from "./pages/product/ProductDetail";
 import ProductList from "./pages/product/ProductList";
 import Contact from './pages/contact/Contact';
+import OrderSuccess from './pages/order/OrderSuccess';
+import OrderHistory from './pages/order/OrderHistory';
+import OrderDetail from './pages/order/OrderDetail';
+import MyOrders from './pages/order/MyOrders';
+import UpdateOrder from './pages/order/UpdateOrder';
 
 import { CartProvider } from './context/cartContext';
 
@@ -26,14 +32,18 @@ import CategoryManager from './admin/pages/CategoryManager';
 import AuthorManager from './admin/pages/AuthorManager';
 import PublisherManager from './admin/pages/PublisherManager';
 import CustomerManager from './admin/pages/CustomerManager';
-import OrderHistory from './pages/order/OrderHistory';
-import OrderDetail from './pages/order/OrderDetail';
 
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('lumi_token');
+  if (!token) return <Navigate to="/login" replace />;
+  return children;
+};
 
 function App() {
   return (
     <CartProvider>
-           <ToastContainer 
+      {/* Cấu hình ToastContainer */}
+      <ToastContainer 
       position="top-right" autoClose={3000} 
       hideProgressBar={false} 
       newestOnTop={false} 
@@ -44,24 +54,30 @@ function App() {
       theme="light" />
 
       <Routes>
-
+        {/* Public Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
 
+        {/* User Routes (Bọc trong Layout chung) */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/products" element={<ProductList />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/order-history" element={<OrderHistory />} />
-          <Route path="/order-history/:id" element={<OrderDetail />} />
+          
+          {/* Cần đăng nhập mới vào được các trang dưới đây */}
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+          <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+          <Route path="/order-success" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
+          <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+          <Route path="/order-detail/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
+          <Route path="/update-order/:id" element={<ProtectedRoute><UpdateOrder /></ProtectedRoute>} />
         </Route>
 
-          <Route path="/admin" element={<AdminLayout />}>
+        {/* Admin Routes */}
+        <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="books" element={<BookManager />} />
           <Route path="categories" element={<CategoryManager />} />
@@ -69,10 +85,11 @@ function App() {
           <Route path="publishers" element={<PublisherManager />} />
           <Route path="customers" element={<CustomerManager />} />
         </Route>
+
+        {/* Trang 404 hoặc Redirect nếu sai đường dẫn */}
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
-  </CartProvider>
- 
-    
+    </CartProvider>
   );
 }
 

@@ -57,7 +57,7 @@ const OrderHistory = () => {
                 <td className="py-3 px-6 text-center">
                 <Link to="/order-history/:id">
   <button className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 transition">
-    Chi tiết
+    Theo dõi đơn hàng
   </button>
 </Link>
                 </td>
