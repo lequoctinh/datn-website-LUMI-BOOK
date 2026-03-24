@@ -15,6 +15,40 @@ const Checkout = () => {
     dia_chi_nhan: '',
     ghi_chu: ''
   });
+  const [errors, setErrors] = useState({});
+
+  const validateForm = () => {
+    let newErrors = {};
+  
+    // 1. Họ và tên: Chỉ chứa chữ cái và khoảng trắng, không chứa số hay ký tự đặc biệt
+    // Hỗ trợ đầy đủ tiếng Việt có dấu
+    const nameRegex = /^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂẾưăạảấầẩẫậắằẳẵặẹẻẽềềểếỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪỬỮỰỳỵỷỹýÝ\s]+$/;
+    if (!formData.ho_ten_nhan.trim()) {
+      newErrors.ho_ten_nhan = "Họ tên không được để trống";
+    } else if (!nameRegex.test(formData.ho_ten_nhan)) {
+      newErrors.ho_ten_nhan = "Họ tên chỉ được chứa chữ cái, không bao gồm số";
+    }
+  
+    // 2. Số điện thoại: Đúng 10 số, không chứa chữ, đúng đầu số nhà mạng VN
+    const phoneRegex = /^(03|05|07|08|09)\d{8}$/;
+    if (!formData.sdt_nhan.trim()) {
+      newErrors.sdt_nhan = "Số điện thoại không được để trống";
+    } else if (!phoneRegex.test(formData.sdt_nhan)) {
+      newErrors.sdt_nhan = "Số điện thoại phải đủ 10 số và không chứa chữ/ký tự lạ";
+    }
+  
+    // 3. Địa chỉ: Không để trống và ít nhất phải có độ dài hợp lý (ví dụ > 10 ký tự)
+    if (!formData.dia_chi_nhan.trim()) {
+      newErrors.dia_chi_nhan = "Địa chỉ nhận hàng không được để trống";
+    } else if (formData.dia_chi_nhan.trim().length < 10) {
+      newErrors.dia_chi_nhan = "Vui lòng nhập địa chỉ chi tiết hơn (Số nhà, tên đường...)";
+    }
+  
+    // Ghi chú: Không cần validate vì là tùy chọn
+  
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   useEffect(() => {
     const fetchCart = async () => {
@@ -31,6 +65,11 @@ const Checkout = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Xóa lỗi của trường đang nhập để giao diện sạch sẽ
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
   const calculateSubtotal = () => {
@@ -42,9 +81,14 @@ const Checkout = () => {
   const totalAmount = subtotal + shippingFee;
 
   const handleSubmit = async () => {
-    if (!formData.ho_ten_nhan || !formData.sdt_nhan || !formData.dia_chi_nhan) {
-      alert("Vui lòng điền đầy đủ thông tin giao hàng");
-      return;
+    // Gọi hàm check lỗi
+    if (!validateForm()) {
+        return; // Dừng lại nếu có lỗi
+    }
+
+    if (cartItems.length === 0) {
+        alert("Giỏ hàng trống");
+        return;
     }
 
     setLoading(true);
@@ -83,51 +127,61 @@ const Checkout = () => {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-text-secondary">Họ và tên</label>
-                  <input 
-                    type="text" 
-                    name="ho_ten_nhan"
-                    value={formData.ho_ten_nhan}
-                    onChange={handleInputChange}
-                    placeholder="Nguyễn Văn A" 
-                    className="w-full px-4 py-2 rounded-lg border border-border-default focus:border-brand-primary outline-none transition-all" 
-                  />
+                  {/* Họ và tên */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-text-secondary">Họ và tên</label>
+                    <input 
+                      type="text" 
+                      name="ho_ten_nhan"
+                      value={formData.ho_ten_nhan}
+                      onChange={handleInputChange}
+                      placeholder="Nguyễn Văn A" 
+                      className={`w-full px-4 py-2 rounded-lg border focus:border-brand-primary outline-none transition-all ${errors.ho_ten_nhan ? 'border-red-500 bg-red-50' : 'border-border-default'}`} 
+                    />
+                    {errors.ho_ten_nhan && <p className="text-red-500 text-xs italic mt-1">{errors.ho_ten_nhan}</p>}
+                  </div>
+
+                  {/* Số điện thoại */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-text-secondary">Số điện thoại</label>
+                    <input 
+                      type="text" // Dùng text để kiểm soát regex tốt hơn tel
+                      name="sdt_nhan"
+                      value={formData.sdt_nhan}
+                      onChange={handleInputChange}
+                      placeholder="0901234567" 
+                      className={`w-full px-4 py-2 rounded-lg border focus:border-brand-primary outline-none transition-all ${errors.sdt_nhan ? 'border-red-500 bg-red-50' : 'border-border-default'}`} 
+                    />
+                    {errors.sdt_nhan && <p className="text-red-500 text-xs italic mt-1">{errors.sdt_nhan}</p>}
+                  </div>
+
+                  {/* Địa chỉ nhận hàng */}
+                  <div className="md:col-span-2 space-y-2">
+                    <label className="text-sm font-semibold text-text-secondary">Địa chỉ nhận hàng</label>
+                    <input 
+                      type="text" 
+                      name="dia_chi_nhan"
+                      value={formData.dia_chi_nhan}
+                      onChange={handleInputChange}
+                      placeholder="Số 123, đường ABC, Quận/Huyện, Tỉnh/Thành..." 
+                      className={`w-full px-4 py-2 rounded-lg border focus:border-brand-primary outline-none transition-all ${errors.dia_chi_nhan ? 'border-red-500 bg-red-50' : 'border-border-default'}`} 
+                    />
+                    {errors.dia_chi_nhan && <p className="text-red-500 text-xs italic mt-1">{errors.dia_chi_nhan}</p>}
+                  </div>
+
+                  {/* Ghi chú - Không có lỗi */}
+                  <div className="md:col-span-2 space-y-2">
+                    <label className="text-sm font-semibold text-text-secondary">Ghi chú (Tùy chọn)</label>
+                    <textarea 
+                      rows="2" 
+                      name="ghi_chu"
+                      value={formData.ghi_chu}
+                      onChange={handleInputChange}
+                      placeholder="Ví dụ: Giao vào giờ hành chính..." 
+                      className="w-full px-4 py-2 rounded-lg border border-border-default focus:border-brand-primary outline-none transition-all"
+                    ></textarea>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-text-secondary">Số điện thoại</label>
-                  <input 
-                    type="tel" 
-                    name="sdt_nhan"
-                    value={formData.sdt_nhan}
-                    onChange={handleInputChange}
-                    placeholder="090..." 
-                    className="w-full px-4 py-2 rounded-lg border border-border-default focus:border-brand-primary outline-none transition-all" 
-                  />
-                </div>
-                <div className="md:col-span-2 space-y-2">
-                  <label className="text-sm font-semibold text-text-secondary">Địa chỉ nhận hàng</label>
-                  <input 
-                    type="text" 
-                    name="dia_chi_nhan"
-                    value={formData.dia_chi_nhan}
-                    onChange={handleInputChange}
-                    placeholder="Số nhà, tên đường, Phường/Xã..." 
-                    className="w-full px-4 py-2 rounded-lg border border-border-default focus:border-brand-primary outline-none transition-all" 
-                  />
-                </div>
-                <div className="md:col-span-2 space-y-2">
-                  <label className="text-sm font-semibold text-text-secondary">Ghi chú (Tùy chọn)</label>
-                  <textarea 
-                    rows="2" 
-                    name="ghi_chu"
-                    value={formData.ghi_chu}
-                    onChange={handleInputChange}
-                    placeholder="Ví dụ: Giao giờ hành chính..." 
-                    className="w-full px-4 py-2 rounded-lg border border-border-default focus:border-brand-primary outline-none transition-all"
-                  ></textarea>
-                </div>
-              </div>
             </section>
 
             <section className="bg-surface p-6 rounded-2xl shadow-card border border-border-light">
