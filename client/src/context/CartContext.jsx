@@ -8,7 +8,7 @@ export function CartProvider({ children }) {
     const [cartItems, setCartItems] = useState([]);
 
     const fetchCart = async () => {
-        // 1. Kiểm tra token trước khi gọi để tránh gọi thừa
+        // 1. Kiểm tra token trước   khi gọi để tránh gọi thừa
         const token = localStorage.getItem('lumi_token'); 
         if (!token) {
             setCartItems([]);

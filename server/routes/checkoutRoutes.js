@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const checkoutController = require('../controllers/checkoutController');
-const { protect } = require('../middlewares/auth'); // Middleware xác thực JWT
+const { protect } = require('../middlewares/auth');
 
-router.use(protect); // Tất cả các route bên dưới cần đăng nhập
+router.use(protect); 
 
 router.post('/place-order', checkoutController.createOrder);
 router.get('/my-orders', checkoutController.getMyOrders);

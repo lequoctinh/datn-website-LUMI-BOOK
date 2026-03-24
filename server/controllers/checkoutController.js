@@ -12,8 +12,8 @@ exports.createOrder = async (req, res) => {
         // Lấy sản phẩm trong giỏ hàng
         const [cartItems] = await connection.execute(
             `SELECT g.*, s.gia_ban, s.so_luong_ton 
-             FROM gio_hang g JOIN sach s ON g.sach_id = s.id 
-             WHERE g.nguoi_dung_id = ?`, [userId]
+            FROM gio_hang g JOIN sach s ON g.sach_id = s.id 
+            WHERE g.nguoi_dung_id = ?`, [userId]
         );
 
         if (cartItems.length === 0) {
@@ -32,7 +32,7 @@ exports.createOrder = async (req, res) => {
         // 1. Tạo đơn hàng
         const [orderResult] = await connection.execute(
             `INSERT INTO don_hang (nguoi_dung_id, tong_tien, phuong_thuc_thanh_toan, ho_ten_nguoi_nhan, sdt_nguoi_nhan, dia_chi_giao_hang, trang_thai) 
-             VALUES (?, ?, ?, ?, ?, ?, 'cho_duyet')`,
+            VALUES (?, ?, ?, ?, ?, ?, 'cho_duyet')`,
             [userId, tong_tien, phuong_thuc_thanh_toan, ho_ten_nhan, sdt_nhan, dia_chi_nhan]
         );
         const orderId = orderResult.insertId;
@@ -129,9 +129,9 @@ exports.getOrderDetail = async (req, res) => {
         const [order] = await pool.execute(`SELECT * FROM don_hang WHERE id = ?`, [req.params.id]);
         const [items] = await pool.execute(
             `SELECT ct.*, s.ten_sach, s.hinh_anh 
-             FROM don_hang_chi_tiet ct 
-             JOIN sach s ON ct.sach_id = s.id 
-             WHERE ct.don_hang_id = ?`, [req.params.id]
+            FROM don_hang_chi_tiet ct 
+            JOIN sach s ON ct.sach_id = s.id 
+            WHERE ct.don_hang_id = ?`, [req.params.id]
         );
         res.json({ success: true, order: order[0], items });
     } catch (error) {
