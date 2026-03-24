@@ -21,7 +21,6 @@ const UpdateOrder = () => {
     const fetchOrderDetail = async () => {
       try {
         const res = await axiosClient.get(`/checkout/my-orders/${id}`);
-        // Kiểm tra logic: Nếu không phải 'cho_duyet', chặn không cho sửa
         if (res.order.trang_thai !== 'cho_duyet') {
           toast.warning("Đơn hàng đã được xử lý, không thể chỉnh sửa!");
           navigate('/my-orders');
@@ -46,7 +45,6 @@ const UpdateOrder = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    // Xóa lỗi của trường đang nhập
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -56,8 +54,6 @@ const UpdateOrder = () => {
 
 const validateForm = () => {
   let newErrors = {};
-
-  // 1. Họ và tên: Chỉ chứa chữ cái và khoảng trắng
   const nameRegex = /^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂẾưăạảấầẩẫậắằẳẵặẹẻẽềềểếỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪỬỮỰỳỵỷỹýÝ\s]+$/;
   if (!formData.ho_ten_nhan?.trim()) {
     newErrors.ho_ten_nhan = "Họ tên không được để trống";
@@ -65,7 +61,6 @@ const validateForm = () => {
     newErrors.ho_ten_nhan = "Họ tên chỉ được chứa chữ cái, không bao gồm số";
   }
 
-  // 2. Số điện thoại: Đúng 10 số VN
   const phoneRegex = /^(03|05|07|08|09)\d{8}$/;
   if (!formData.sdt_nhan?.trim()) {
     newErrors.sdt_nhan = "Số điện thoại không được để trống";
@@ -73,7 +68,6 @@ const validateForm = () => {
     newErrors.sdt_nhan = "Số điện thoại phải đủ 10 số và đúng định dạng VN";
   }
 
-  // 3. Địa chỉ: Không để trống và đủ độ dài
   if (!formData.dia_chi_giao_hang?.trim()) {
     newErrors.dia_chi_giao_hang = "Địa chỉ nhận hàng không được để trống";
   } else if (formData.dia_chi_giao_hang.trim().length < 10) {
@@ -87,7 +81,6 @@ const validateForm = () => {
 const handleSubmit = async (e) => {
   e.preventDefault();
   
-  // Kiểm tra lỗi trước khi gọi API
   if (!validateForm()) return;
 
   setUpdating(true);
@@ -104,7 +97,6 @@ const handleSubmit = async (e) => {
   return (
     <div className="min-h-screen bg-[#FBFBFD] py-12 px-4 font-body">
       <div className="max-w-2xl mx-auto">
-        {/* Nút quay lại */}
         <button 
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-text-secondary hover:text-brand-primary transition-colors mb-6 group"
@@ -121,7 +113,6 @@ const handleSubmit = async (e) => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Họ tên */}
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-text-secondary uppercase tracking-widest ml-1">Họ tên người nhận</label>
                   <div className="relative">
@@ -138,8 +129,6 @@ const handleSubmit = async (e) => {
                   </div>
                   {errors.ho_ten_nhan && <p className="text-red-500 text-xs italic ml-1">{errors.ho_ten_nhan}</p>}
                 </div>
-
-                {/* Số điện thoại */}
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-text-secondary uppercase tracking-widest ml-1">Số điện thoại</label>
                   <div className="relative">
@@ -156,8 +145,6 @@ const handleSubmit = async (e) => {
                   </div>
                   {errors.sdt_nhan && <p className="text-red-500 text-xs italic ml-1">{errors.sdt_nhan}</p>}
                 </div>
-
-                {/* Địa chỉ */}
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-text-secondary uppercase tracking-widest ml-1">Địa chỉ giao hàng</label>
                   <div className="relative">
@@ -174,16 +161,12 @@ const handleSubmit = async (e) => {
                   </div>
                   {errors.dia_chi_giao_hang && <p className="text-red-500 text-xs italic ml-1">{errors.dia_chi_giao_hang}</p>}
                 </div>
-
-              {/* Warning box */}
               <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex gap-3 text-amber-700">
                 <FontAwesomeIcon icon={faExclamationTriangle} className="mt-1" />
                 <p className="text-xs leading-relaxed font-medium">
                   Lưu ý: Bạn chỉ có thể sửa thông tin khi đơn hàng đang ở trạng thái <b>Chờ duyệt</b>. Khi đơn hàng đã chuyển sang giao, mọi thay đổi sẽ không được áp dụng.
                 </p>
               </div>
-
-              {/* Submit Button */}
               <button 
                 type="submit"
                 disabled={updating}
