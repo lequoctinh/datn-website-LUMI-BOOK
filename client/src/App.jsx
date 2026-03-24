@@ -19,7 +19,7 @@ import ProductDetail from "./pages/product/ProductDetail";
 import ProductList from "./pages/product/ProductList";
 import Contact from './pages/contact/Contact';
 import OrderSuccess from './pages/order/OrderSuccess';
-import OrderHistory from './pages/order/OrderHistory';
+// import OrderHistory from './pages/order/OrderHistory';
 import OrderDetail from './pages/order/OrderDetail';
 import MyOrders from './pages/order/MyOrders';
 import UpdateOrder from './pages/order/UpdateOrder';
@@ -32,6 +32,7 @@ import CategoryManager from './admin/pages/CategoryManager';
 import AuthorManager from './admin/pages/AuthorManager';
 import PublisherManager from './admin/pages/PublisherManager';
 import CustomerManager from './admin/pages/CustomerManager';
+import OrderManager from './admin/pages/OrderManager';
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('lumi_token');
@@ -84,6 +85,7 @@ function App() {
           <Route path="authors" element={<AuthorManager />} />
           <Route path="publishers" element={<PublisherManager />} />
           <Route path="customers" element={<CustomerManager />} />
+          <Route path="orders" element={<OrderManager />} />
         </Route>
 
         {/* Trang 404 hoặc Redirect nếu sai đường dẫn */}

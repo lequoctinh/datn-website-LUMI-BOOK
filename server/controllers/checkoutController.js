@@ -9,7 +9,6 @@ exports.createOrder = async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // Lấy sản phẩm trong giỏ hàng
         const [cartItems] = await connection.execute(
             `SELECT g.*, s.gia_ban, s.so_luong_ton 
             FROM gio_hang g JOIN sach s ON g.sach_id = s.id 
@@ -20,7 +19,6 @@ exports.createOrder = async (req, res) => {
             return res.status(400).json({ message: 'Giỏ hàng trống!' });
         }
 
-        // Tính tổng tiền & Kiểm tra kho
         let tong_tien = 0;
         for (const item of cartItems) {
             if (item.so_luong > item.so_luong_ton) {
@@ -29,7 +27,6 @@ exports.createOrder = async (req, res) => {
             tong_tien += item.so_luong * item.gia_ban;
         }
 
-        // 1. Tạo đơn hàng
         const [orderResult] = await connection.execute(
             `INSERT INTO don_hang (nguoi_dung_id, tong_tien, phuong_thuc_thanh_toan, ho_ten_nguoi_nhan, sdt_nguoi_nhan, dia_chi_giao_hang, trang_thai) 
             VALUES (?, ?, ?, ?, ?, ?, 'cho_duyet')`,
@@ -37,7 +34,6 @@ exports.createOrder = async (req, res) => {
         );
         const orderId = orderResult.insertId;
 
-        // 2. Thêm chi tiết đơn hàng & Trừ kho
         for (const item of cartItems) {
             await connection.execute(
                 `INSERT INTO don_hang_chi_tiet (don_hang_id, sach_id, so_luong, gia_luc_mua) VALUES (?, ?, ?, ?)`,
@@ -49,7 +45,6 @@ exports.createOrder = async (req, res) => {
             );
         }
 
-        // 3. Xóa giỏ hàng
         await connection.execute(`DELETE FROM gio_hang WHERE nguoi_dung_id = ?`, [userId]);
 
         await connection.commit();
@@ -94,7 +89,6 @@ exports.cancelOrder = async (req, res) => {
             return res.status(400).json({ message: 'Đơn hàng đã được xử lý, không thể hủy!' });
         }
 
-        // Lấy chi tiết để cộng lại kho
         const [items] = await connection.execute('SELECT sach_id, so_luong FROM don_hang_chi_tiet WHERE don_hang_id = ?', [id]);
         for (const item of items) {
             await connection.execute('UPDATE sach SET so_luong_ton = so_luong_ton + ? WHERE id = ?', [item.so_luong, item.sach_id]);
