@@ -2,12 +2,12 @@ import axios from 'axios';
 
 const axiosClient = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
+    timeout: 15000,
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
-// Tự động gắn Token vào header nếu có
 axiosClient.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('lumi_token');
@@ -21,13 +21,21 @@ axiosClient.interceptors.request.use(
 
 axiosClient.interceptors.response.use(
     (response) => {
-        if (response && response.data) {
-            return response.data;
-        }
-        return response;
+        return response.data;
     },
     (error) => {
-        throw error;
+        if (error.response) {
+            const { status } = error.response;
+            
+            if (status === 401) {
+                localStorage.removeItem('lumi_token');
+                window.location.href = '/login';
+            }
+            
+            return Promise.reject(error.response.data);
+        }
+        
+        return Promise.reject({ message: "Lỗi kết nối server" });
     }
 );
 

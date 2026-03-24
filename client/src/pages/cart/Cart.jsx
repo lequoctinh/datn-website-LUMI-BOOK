@@ -15,7 +15,7 @@ const Cart = () => {
     const { cartItems, updateQuantity, removeItem } = useCart();
 
     const subtotal = cartItems.reduce((acc, item) => acc + (item.gia_ban * item.so_luong), 0);
-    const shipping = cartItems.length > 0 ? 30000 : 0;
+    const shipping = 0;
 
     const handleUpdateQuantity = async (id, currentQty, delta, stock) => {
       const newQty = currentQty + delta;
@@ -103,7 +103,7 @@ const Cart = () => {
                                 </div>
                                 <div className="flex justify-between text-gray-500 font-medium">
                                     <span>Phí vận chuyển</span>
-                                    <span className="text-gray-900 font-bold">{shipping.toLocaleString('vi-VN')} đ</span>
+                                    <span className="text-green-600 font-bold uppercase text-xs">Miễn phí toàn quốc</span>
                                 </div>
                                 <div className="pt-5 border-t border-gray-100 flex justify-between items-end">
                                     <span className="font-bold text-gray-800">Tổng cộng</span>

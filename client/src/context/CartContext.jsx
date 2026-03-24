@@ -43,7 +43,7 @@ export function CartProvider({ children }) {
             }
         } catch (error) {
             console.error("Lỗi chi tiết:", error.response?.data); 
-            toast.error(error.response?.data?.message || "Lỗi khi thêm");
+            toast.error(error.response?.data?.message || "Sản phẩm hết hàng");
         }
     };
 

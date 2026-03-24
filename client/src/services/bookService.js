@@ -12,6 +12,7 @@ const bookService = {
         const response = await axios.get(`${API_URL}/admin?page=${page}&limit=${limit}&search=${search}`, getAuthHeaders());
         return response.data;
     },
+
     getBookById: async (id) => {
         const response = await axios.get(`${API_URL}/admin/${id}`, getAuthHeaders());
         return response.data;
