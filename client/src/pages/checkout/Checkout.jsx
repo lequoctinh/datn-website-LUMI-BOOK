@@ -22,7 +22,7 @@ const Checkout = () => {
 
   const validateForm = () => {
     let newErrors = {};
-    const nameRegex = /^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂẾưăạảấầẩẫậắằẳẵặẹẻẽềềểếỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪỬỮỰỳỵỷỹýÝ\s]+$/;
+    const nameRegex = /^[\p{L}\s]+$/u;
     if (!formData.ho_ten_nhan.trim()) {
       newErrors.ho_ten_nhan = "Họ tên không được để trống";
     } else if (!nameRegex.test(formData.ho_ten_nhan)) {
