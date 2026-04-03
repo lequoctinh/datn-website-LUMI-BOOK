@@ -5,7 +5,7 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {
+    extend: { 
       colors: {
         //  NỀN & TEXT
         background: "#F6F1E9",      // Kem giấy – nền chính

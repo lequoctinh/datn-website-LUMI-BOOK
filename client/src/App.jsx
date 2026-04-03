@@ -23,6 +23,12 @@ import OrderSuccess from './pages/order/OrderSuccess';
 import OrderDetail from './pages/order/OrderDetail';
 import MyOrders from './pages/order/MyOrders';
 import UpdateOrder from './pages/order/UpdateOrder';
+import BiographyBooks from './pages/ProductsCategory/BiographyBooks';
+import ChildrenBooks from './pages/ProductsCategory/ChildrenBooks';
+import EconomyBooks from './pages/ProductsCategory/EconomyBooks';
+import LanguageBooks from './pages/ProductsCategory/LanguageBooks';
+import LiteraryBooks from './pages/ProductsCategory/LiteraryBooks';
+import MentalityBooks from './pages/ProductsCategory/MentalityBooks';
 
 import { CartProvider } from './context/cartContext';
 
@@ -33,6 +39,7 @@ import AuthorManager from './admin/pages/AuthorManager';
 import PublisherManager from './admin/pages/PublisherManager';
 import CustomerManager from './admin/pages/CustomerManager';
 import OrderManager from './admin/pages/OrderManager';
+import VoucherManager from './admin/pages/VoucherManager';
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('lumi_token');
@@ -43,7 +50,6 @@ const ProtectedRoute = ({ children }) => {
 function App() {
   return (
     <CartProvider>
-      {/* Cấu hình ToastContainer */}
       <ToastContainer 
       position="top-right" autoClose={3000} 
       hideProgressBar={false} 
@@ -55,19 +61,23 @@ function App() {
       theme="light" />
 
       <Routes>
-        {/* Public Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
 
-        {/* User Routes (Bọc trong Layout chung) */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<ProductList />} />
           <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/category/literature" element={<LiteraryBooks />} />
+          <Route path="/category/economy" element={<EconomyBooks/>} />
+          <Route path="/category/children" element={<ChildrenBooks />} />
+          <Route path="/category/language" element={<LanguageBooks />} />
+          <Route path="/category/biography" element={<BiographyBooks />} />
+          <Route path="/category/mentality" element={<MentalityBooks />} />
+          <Route path="/category/life" element={<MentalityBooks />} />
           <Route path="/contact" element={<Contact />} />
           
-          {/* Cần đăng nhập mới vào được các trang dưới đây */}
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
@@ -77,7 +87,6 @@ function App() {
           <Route path="/update-order/:id" element={<ProtectedRoute><UpdateOrder /></ProtectedRoute>} />
         </Route>
 
-        {/* Admin Routes */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="books" element={<BookManager />} />
@@ -86,9 +95,9 @@ function App() {
           <Route path="publishers" element={<PublisherManager />} />
           <Route path="customers" element={<CustomerManager />} />
           <Route path="orders" element={<OrderManager />} />
+          <Route path="vouchers" element={<VoucherManager />} />
         </Route>
 
-        {/* Trang 404 hoặc Redirect nếu sai đường dẫn */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </CartProvider>
