@@ -13,4 +13,15 @@ router.get('/orders', adminOrderController.getAllOrders);
 router.put('/update-order-status/:id', adminOrderController.updateOrderStatus);
 
 router.get('/orders/:id', adminOrderController.getOrderDetail);
+
+// Thêm vào cùng nhóm với các route admin khác
+router.get('/stats/overview', adminOrderController.getDashboardStats);
+
+router.get('/stats/charts', adminOrderController.getChartData);
+
+router.get('/stats/low-stock', adminOrderController.getLowStockBooks);
+
+router.get('/stats/top-selling', adminOrderController.getTopSellingBooks);
+
+router.get('/stats/top-rated', adminOrderController.getTopRatedBooks);
 module.exports = router;
