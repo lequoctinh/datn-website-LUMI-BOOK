@@ -17,7 +17,7 @@ const formatPrice = (price) => {
     }).format(price).replace('₫', 'đ');
 };
 
-const LiteraryBooks = () => {
+function LiteraryBooks() {
     const navigate = useNavigate();
     const { addToCart } = useCart();
     
@@ -88,20 +88,19 @@ const LiteraryBooks = () => {
             8: '/category/biography',
             9: '/category/mentality',
             10: '/category/life'
-
-
-
         };
+        
         const targetPath = categoryMap[id];
-
         if (targetPath) {
             navigate(targetPath);
         } else {
             navigate(`/products?category_id=${id}`);
         }
     };
+
     return (
         <div className="min-h-screen bg-[#F8F9FA] font-body text-text-primary">
+            {/* Breadcrumb */}
             <div className="bg-white border-b border-gray-100">
                 <div className="max-w-[1200px] mx-auto px-4 py-4 flex items-center text-[13px] text-gray-400">
                     <Link to="/" className="hover:text-brand-primary transition-colors">Trang chủ</Link>
@@ -110,6 +109,7 @@ const LiteraryBooks = () => {
                 </div>
             </div>
 
+            {/* Header Section */}
             <div className="bg-white py-12 mb-8 border-b border-gray-50">
                 <div className="max-w-[1200px] mx-auto px-4">
                     <div className="flex flex-col md:flex-row justify-between items-end gap-6">
@@ -118,13 +118,13 @@ const LiteraryBooks = () => {
                                 Sách Văn Học
                             </h1>
                             <p className="text-text-muted text-lg font-light leading-relaxed">
-                                Tuyển tập những tác phẩm văn học chọn lọc, mang giá trị nghệ thuật cao và sức sống bền bỉ qua thời gian.
+                                Khám phá thế giới qua những trang sách văn học kinh điển và hiện đại, nơi cảm xúc và nghệ thuật ngôn từ thăng hoa.
                             </p>
                         </div>
                         <div className="hidden md:block">
                             <div className="flex items-center gap-2 text-brand-primary font-bold text-sm bg-brand-primary/5 px-4 py-2 rounded-full">
                                 <FontAwesomeIcon icon={faCheckCircle} />
-                                <span>Sản phẩm chính hãng 100%</span>
+                                <span>Sản phẩm chính hiệu LUMI</span>
                             </div>
                         </div>
                     </div>
@@ -134,8 +134,10 @@ const LiteraryBooks = () => {
             <div className="max-w-[1200px] mx-auto px-4 pb-20">
                 <div className="flex flex-col lg:flex-row gap-10">
                     
+                    {/* Sidebar Filters */}
                     <aside className="w-full lg:w-[280px] shrink-0">
                         <div className="sticky top-28 space-y-6">
+                            {/* Lọc theo giá */}
                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                                 <h3 className="text-sm font-black uppercase tracking-widest mb-6 flex items-center gap-2 border-b border-gray-50 pb-4">
                                     <FontAwesomeIcon icon={faSlidersH} className="text-brand-primary" />
@@ -164,10 +166,11 @@ const LiteraryBooks = () => {
                                 </div>
                             </div>
 
+                            {/* Danh mục */}
                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                                 <h3 className="text-sm font-black uppercase tracking-widest mb-6 flex items-center gap-2 border-b border-gray-50 pb-4">
                                     <FontAwesomeIcon icon={faThLarge} className="text-brand-primary" />
-                                    Danh mục
+                                    Danh mục khác
                                 </h3>
                                 <div className="flex flex-col gap-2">
                                     {categories.map((cat) => (
@@ -194,10 +197,12 @@ const LiteraryBooks = () => {
                         </div>
                     </aside>
 
+                    {/* Main Content */}
                     <main className="flex-1">
+                        {/* Toolbar */}
                         <div className="flex justify-between items-center mb-10 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                             <span className="text-sm text-gray-500 font-medium">
-                                Tìm thấy <b className="text-text-primary">{pagination.total}</b> kết quả
+                                Tìm thấy <b className="text-text-primary">{pagination.total}</b> cuốn sách
                             </span>
                             <div className="flex items-center gap-3">
                                 <span className="text-xs font-bold text-gray-400 uppercase">Sắp xếp:</span>
@@ -215,6 +220,7 @@ const LiteraryBooks = () => {
                             </div>
                         </div>
 
+                        {/* Product Grid */}
                         {loading ? (
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
                                 {[...Array(6)].map((_, i) => (
@@ -230,15 +236,16 @@ const LiteraryBooks = () => {
                                 {books.map((book) => (
                                     <div 
                                         key={book.id} 
-                                        className="group bg-surface rounded-2xl p-3 border border-border-light shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full"
+                                        className="group bg-white rounded-2xl p-3 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full"
                                     >
-                                        <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 bg-white">
+                                        <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 bg-gray-50">
                                             <img 
                                                 src={book.hinh_anh} 
                                                 alt={book.ten_sach} 
                                                 className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" 
                                             />
                                             
+                                            {/* Action Buttons Overlay */}
                                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                                 <button 
                                                     onClick={(e) => handleAddToCart(e, book)}
@@ -246,7 +253,6 @@ const LiteraryBooks = () => {
                                                 >
                                                     <FontAwesomeIcon icon={faCartPlus} />
                                                 </button>
-
                                                 <button 
                                                     onClick={() => navigate(`/product/${book.id}`)}
                                                     className="w-10 h-10 bg-white text-brand-primary rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300 delay-75 shadow-lg"
@@ -256,7 +262,7 @@ const LiteraryBooks = () => {
                                             </div>
 
                                             {book.gia_giam > 0 && (
-                                                <div className="absolute top-2 left-2 bg-accent-primary text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-md">
+                                                <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-md">
                                                     -{Math.round(((book.gia_ban - book.gia_giam) / book.gia_ban) * 100)}%
                                                 </div>
                                             )}
@@ -274,18 +280,15 @@ const LiteraryBooks = () => {
                                                 {book.ten_sach}
                                             </h3>
                                             
-                                            <div className="mt-auto pt-2 border-t border-dashed border-border-light">
+                                            <div className="mt-auto pt-2 border-t border-dashed border-gray-100">
                                                 {book.gia_giam > 0 ? (
                                                     <div className="flex flex-col items-center">
                                                         <span className="text-xs text-gray-400 line-through mb-1">
                                                             {formatPrice(book.gia_ban)}
                                                         </span>
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-lg font-bold text-accent-primary">
+                                                            <span className="text-lg font-bold text-red-500">
                                                                 {formatPrice(book.gia_giam)}
-                                                            </span>
-                                                            <span className="text-[10px] bg-accent-primary/10 text-accent-primary px-2 py-0.5 rounded font-bold">
-                                                                -{Math.round(((book.gia_ban - book.gia_giam) / book.gia_ban) * 100)}%
                                                             </span>
                                                         </div>
                                                     </div>
@@ -301,42 +304,45 @@ const LiteraryBooks = () => {
                             </div>
                         )}
 
-                        <div className="mt-20 flex justify-center items-center gap-4">
-                            <button 
-                                disabled={filters.page === 1}
-                                onClick={() => handleFilterChange('page', filters.page - 1)}
-                                className="w-12 h-12 rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-brand-primary hover:border-brand-primary transition-all font-bold disabled:opacity-30"
-                            >
-                                {"<"}
-                            </button>
-                            <div className="flex gap-2">
-                                {[...Array(pagination.totalPages)].map((_, i) => (
-                                    <button
-                                        key={i + 1}
-                                        onClick={() => handleFilterChange('page', i + 1)}
-                                        className={`w-12 h-12 rounded-2xl font-bold transition-all ${
-                                            filters.page === i + 1 
-                                            ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' 
-                                            : 'bg-white border border-gray-100 text-gray-400 hover:text-brand-primary hover:border-brand-primary'
-                                        }`}
-                                    >
-                                        {i + 1}
-                                    </button>
-                                ))}
+                        {/* Pagination */}
+                        {pagination.totalPages > 1 && (
+                            <div className="mt-20 flex justify-center items-center gap-4">
+                                <button 
+                                    disabled={filters.page === 1}
+                                    onClick={() => handleFilterChange('page', filters.page - 1)}
+                                    className="w-12 h-12 rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-brand-primary hover:border-brand-primary transition-all font-bold disabled:opacity-30"
+                                >
+                                    {"<"}
+                                </button>
+                                <div className="flex gap-2">
+                                    {[...Array(pagination.totalPages)].map((_, i) => (
+                                        <button
+                                            key={i + 1}
+                                            onClick={() => handleFilterChange('page', i + 1)}
+                                            className={`w-12 h-12 rounded-2xl font-bold transition-all ${
+                                                filters.page === i + 1 
+                                                ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' 
+                                                : 'bg-white border border-gray-100 text-gray-400 hover:text-brand-primary hover:border-brand-primary'
+                                            }`}
+                                        >
+                                            {i + 1}
+                                        </button>
+                                    ))}
+                                </div>
+                                <button 
+                                    disabled={filters.page === pagination.totalPages}
+                                    onClick={() => handleFilterChange('page', filters.page + 1)}
+                                    className="w-12 h-12 rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-brand-primary hover:border-brand-primary transition-all font-bold disabled:opacity-30"
+                                >
+                                    {">"}
+                                </button>
                             </div>
-                            <button 
-                                disabled={filters.page === pagination.totalPages}
-                                onClick={() => handleFilterChange('page', filters.page + 1)}
-                                className="w-12 h-12 rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-brand-primary hover:border-brand-primary transition-all font-bold disabled:opacity-30"
-                            >
-                                {">"}
-                            </button>
-                        </div>
+                        )}
                     </main>
                 </div>
             </div>
         </div>
     );
-};
+}
 
 export default LiteraryBooks;

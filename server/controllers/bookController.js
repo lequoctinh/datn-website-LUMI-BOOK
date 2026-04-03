@@ -1,4 +1,16 @@
 const { pool } = require('../config/db');
+const fs = require('fs').promises;
+const path = require('path');
+
+const deleteFile = async (fileName) => {
+    if (!fileName) return;
+    try {
+        const filePath = path.join(__dirname, '../uploads/products/', fileName);
+        await fs.unlink(filePath);
+    } catch (err) {
+        console.error("Không thể xóa file cũ:", err.message);
+    }
+};
 
 exports.getBooksAdmin = async (req, res) => {
     try {
@@ -48,7 +60,6 @@ exports.getBooksAdmin = async (req, res) => {
 exports.getBookById = async (req, res) => {
     try {
         const bookId = req.params.id;
-        
         const [bookRows] = await pool.execute(
             `SELECT s.*, nxb.ten_nha_xuat_ban 
             FROM sach s 
@@ -61,18 +72,12 @@ exports.getBookById = async (req, res) => {
         const book = bookRows[0];
 
         const [categories] = await pool.execute(
-            `SELECT dm.id, dm.ten_danh_muc 
-            FROM sach_danh_muc sdm 
-            JOIN danh_muc dm ON sdm.danh_muc_id = dm.id 
-            WHERE sdm.sach_id = ?`, 
+            `SELECT dm.id, dm.ten_danh_muc FROM sach_danh_muc sdm JOIN danh_muc dm ON sdm.danh_muc_id = dm.id WHERE sdm.sach_id = ?`, 
             [bookId]
         );
 
         const [authors] = await pool.execute(
-            `SELECT tg.id, tg.ten_tac_gia 
-            FROM sach_tac_gia stg 
-            JOIN tac_gia tg ON stg.tac_gia_id = tg.id 
-            WHERE stg.sach_id = ?`, 
+            `SELECT tg.id, tg.ten_tac_gia FROM sach_tac_gia stg JOIN tac_gia tg ON stg.tac_gia_id = tg.id WHERE stg.sach_id = ?`, 
             [bookId]
         );
 
@@ -88,12 +93,9 @@ exports.getBookById = async (req, res) => {
 exports.createBook = async (req, res) => {
     const connection = await pool.getConnection(); 
     try {
-        const { 
-            ten_sach, nha_cung_cap, nguoi_dich, nxb_id, nam_xuat_ban, ngon_ngu,
-            gia_ban, gia_giam, so_luong_ton, so_trang, kich_thuoc, hinh_thuc,
-            mo_ta, noi_dung, hinh_anh, album_anh, trang_thai,
-            danh_muc_ids, tac_gia_ids 
-        } = req.body;
+        const data = req.body;
+        const hinh_anh = req.files['hinh_anh'] ? req.files['hinh_anh'][0].filename : null;
+        const album_anh = req.files['album_anh'] ? req.files['album_anh'].map(f => f.filename) : [];
 
         await connection.beginTransaction();
 
@@ -104,20 +106,23 @@ exports.createBook = async (req, res) => {
                 mo_ta, noi_dung, hinh_anh, album_anh, trang_thai
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-                ten_sach, nha_cung_cap || null, nguoi_dich || null, nxb_id || null, nam_xuat_ban || null, ngon_ngu || 'Tiếng Việt',
-                gia_ban || 0, gia_giam || 0, so_luong_ton || 0, so_trang || null, kich_thuoc || null, hinh_thuc || null,
-                mo_ta || null, noi_dung || null, hinh_anh || null, album_anh ? JSON.stringify(album_anh) : null, trang_thai || 'hien_thi'
+                data.ten_sach, data.nha_cung_cap || null, data.nguoi_dich || null, data.nxb_id || null, 
+                data.nam_xuat_ban || null, data.ngon_ngu || 'Tiếng Việt', data.gia_ban || 0, 
+                data.gia_giam || 0, data.so_luong_ton || 0, data.so_trang || null, 
+                data.kich_thuoc || null, data.hinh_thuc || null, data.mo_ta || null, 
+                data.noi_dung || null, hinh_anh, JSON.stringify(album_anh), data.trang_thai || 'hien_thi'
             ]
         );
         const newBookId = bookResult.insertId;
-
-        if (Array.isArray(danh_muc_ids) && danh_muc_ids.length > 0) {
-            const dmValues = danh_muc_ids.map(dm_id => [newBookId, dm_id]);
+        const dmIds = JSON.parse(data.danh_muc_ids || '[]');
+        if (dmIds.length > 0) {
+            const dmValues = dmIds.map(id => [newBookId, id]);
             await connection.query('INSERT INTO sach_danh_muc (sach_id, danh_muc_id) VALUES ?', [dmValues]);
         }
 
-        if (Array.isArray(tac_gia_ids) && tac_gia_ids.length > 0) {
-            const tgValues = tac_gia_ids.map(tg_id => [newBookId, tg_id]);
+        const tgIds = JSON.parse(data.tac_gia_ids || '[]');
+        if (tgIds.length > 0) {
+            const tgValues = tgIds.map(id => [newBookId, id]);
             await connection.query('INSERT INTO sach_tac_gia (sach_id, tac_gia_id) VALUES ?', [tgValues]);
         }
 
@@ -135,12 +140,21 @@ exports.updateBook = async (req, res) => {
     const connection = await pool.getConnection();
     try {
         const bookId = req.params.id;
-        const { 
-            ten_sach, nha_cung_cap, nguoi_dich, nxb_id, nam_xuat_ban, ngon_ngu,
-            gia_ban, gia_giam, so_luong_ton, so_trang, kich_thuoc, hinh_thuc,
-            mo_ta, noi_dung, hinh_anh, album_anh, trang_thai,
-            danh_muc_ids, tac_gia_ids
-        } = req.body;
+        const data = req.body;
+
+        const [oldBook] = await pool.execute('SELECT hinh_anh, album_anh FROM sach WHERE id = ?', [bookId]);
+        if (oldBook.length === 0) throw new Error("Sách không tồn tại");
+
+        let hinh_anh = oldBook[0].hinh_anh;
+        let album_anh = JSON.parse(oldBook[0].album_anh || '[]');
+        if (req.files['hinh_anh']) {
+            await deleteFile(hinh_anh); 
+            hinh_anh = req.files['hinh_anh'][0].filename;
+        }
+        if (req.files['album_anh']) {
+            for (const img of album_anh) await deleteFile(img); 
+            album_anh = req.files['album_anh'].map(f => f.filename);
+        }
 
         await connection.beginTransaction();
 
@@ -151,22 +165,25 @@ exports.updateBook = async (req, res) => {
                 mo_ta = ?, noi_dung = ?, hinh_anh = ?, album_anh = ?, trang_thai = ?
             WHERE id = ?`,
             [
-                ten_sach, nha_cung_cap || null, nguoi_dich || null, nxb_id || null, nam_xuat_ban || null, ngon_ngu || 'Tiếng Việt',
-                gia_ban || 0, gia_giam || 0, so_luong_ton || 0, so_trang || null, kich_thuoc || null, hinh_thuc || null,
-                mo_ta || null, noi_dung || null, hinh_anh || null, album_anh ? JSON.stringify(album_anh) : null, trang_thai,
-                bookId
+                data.ten_sach, data.nha_cung_cap || null, data.nguoi_dich || null, data.nxb_id || null, 
+                data.nam_xuat_ban || null, data.ngon_ngu || 'Tiếng Việt', data.gia_ban || 0, 
+                data.gia_giam || 0, data.so_luong_ton || 0, data.so_trang || null, 
+                data.kich_thuoc || null, data.hinh_thuc || null, data.mo_ta || null, 
+                data.noi_dung || null, hinh_anh, JSON.stringify(album_anh), data.trang_thai, bookId
             ]
         );
 
         await connection.execute('DELETE FROM sach_danh_muc WHERE sach_id = ?', [bookId]);
-        if (Array.isArray(danh_muc_ids) && danh_muc_ids.length > 0) {
-            const dmValues = danh_muc_ids.map(dm_id => [bookId, dm_id]);
+        const dmIds = JSON.parse(data.danh_muc_ids || '[]');
+        if (dmIds.length > 0) {
+            const dmValues = dmIds.map(id => [bookId, id]);
             await connection.query('INSERT INTO sach_danh_muc (sach_id, danh_muc_id) VALUES ?', [dmValues]);
         }
 
         await connection.execute('DELETE FROM sach_tac_gia WHERE sach_id = ?', [bookId]);
-        if (Array.isArray(tac_gia_ids) && tac_gia_ids.length > 0) {
-            const tgValues = tac_gia_ids.map(tg_id => [bookId, tg_id]);
+        const tgIds = JSON.parse(data.tac_gia_ids || '[]');
+        if (tgIds.length > 0) {
+            const tgValues = tgIds.map(id => [bookId, id]);
             await connection.query('INSERT INTO sach_tac_gia (sach_id, tac_gia_id) VALUES ?', [tgValues]);
         }
 
@@ -179,7 +196,6 @@ exports.updateBook = async (req, res) => {
         connection.release();
     }
 };
-
 exports.toggleStatusBook = async (req, res) => {
     try {
         const bookId = req.params.id;

@@ -8,7 +8,7 @@ import {
 
 import bookService from '../../services/bookService';
 import categoryService from '../../services/categoryService';
-import { useCart } from '../../context/CartContext';
+import { useCart } from '../../context/cartContext';
 
 const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -17,7 +17,7 @@ const formatPrice = (price) => {
     }).format(price).replace('₫', 'đ');
 };
 
-const BiographyBooks = () => {
+function BiographyBooks() {
     const navigate = useNavigate();
     const { addToCart } = useCart();
     
@@ -229,13 +229,14 @@ const BiographyBooks = () => {
                                         key={book.id} 
                                         className="group bg-white rounded-2xl p-3 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full"
                                     >
-                                        <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 bg-white">
+                                        <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 bg-gray-50 group-hover:shadow-md transition-all duration-500">
                                             <img 
                                                 src={book.hinh_anh} 
                                                 alt={book.ten_sach} 
-                                                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" 
+                                                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                                                loading="lazy"
                                             />
-                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
                                                 <button 
                                                     onClick={(e) => handleAddToCart(e, book)}
                                                     className="w-10 h-10 bg-white text-brand-primary rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300 shadow-lg"
@@ -250,7 +251,7 @@ const BiographyBooks = () => {
                                                 </button>
                                             </div>
                                             {book.gia_giam > 0 && (
-                                                <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-md">
+                                                <div className="absolute top-2 right-2 bg-red-500 text-white text-[11px] font-bold px-2 py-1 rounded-lg shadow-sm">
                                                     -{Math.round(((book.gia_ban - book.gia_giam) / book.gia_ban) * 100)}%
                                                 </div>
                                             )}
@@ -326,6 +327,6 @@ const BiographyBooks = () => {
             </div>
         </div>
     );
-};
+}
 
 export default BiographyBooks;

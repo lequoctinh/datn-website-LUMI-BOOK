@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar, faCartPlus, faTruck, faShield, faRotateLeft, faPlus, faMinus, faTags, faLanguage, faBookOpen, faRulerCombined, faBookAtlas, faCalendarAlt, faStore, faChevronRight, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { 
+    faStar, faCartPlus, faTruck, faShield, faRotateLeft, 
+    faPlus, faMinus, faTags, faLanguage, faBookOpen, 
+    faRulerCombined, faBookAtlas, faCalendarAlt, faStore, 
+    faChevronRight, faChevronLeft 
+} from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
 import bookService from '../../services/bookService';
 import { useCart } from '../../context/cartContext';
+
+const IMAGE_BASE_URL = 'http://localhost:5000/uploads/products/';
 
 const ProductDetail = () => {
     const { id } = useParams();
@@ -30,9 +37,14 @@ const ProductDetail = () => {
                     let albumArray = [];
                     try {
                         albumArray = typeof data.album_anh === 'string' ? JSON.parse(data.album_anh) : (data.album_anh || []);
-                    } catch (e) {}
+                    } catch (e) {
+                        albumArray = [];
+                    }
                     
-                    const images = [data.hinh_anh, ...albumArray].filter(Boolean);
+                    const images = [data.hinh_anh, ...albumArray]
+                        .filter(Boolean)
+                        .map(img => img.startsWith('http') ? img : `${IMAGE_BASE_URL}${img}`);
+                    
                     setAllImages(images);
                     setActiveImage(images[0] || 'https://via.placeholder.com/400x600?text=No+Image');
 
@@ -95,8 +107,6 @@ const ProductDetail = () => {
     const authors = book.tac_gia?.map(t => t.ten_tac_gia).join(', ') || 'Đang cập nhật';
     const categories = book.danh_muc?.map(c => c.ten_danh_muc).join(', ') || 'Đang cập nhật';
 
-    
-
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
             <div className="bg-white border-b border-gray-100 py-4 mb-8 sticky top-0 z-40 shadow-sm">
@@ -110,9 +120,7 @@ const ProductDetail = () => {
             </div>
 
             <div className="max-w-[1200px] mx-auto px-4 space-y-8">
-                
                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 lg:p-10 flex flex-col lg:flex-row gap-10 lg:gap-16">
-                    
                     <div className="w-full lg:w-[45%] flex flex-col gap-6 select-none">
                         <div className="w-full aspect-[3/4] rounded-2xl border border-gray-100 bg-gray-50 flex items-center justify-center p-4 relative group overflow-hidden">
                             {isDiscounted && (
@@ -120,7 +128,12 @@ const ProductDetail = () => {
                                     -{percentDiscount}%
                                 </div>
                             )}
-                            <img src={activeImage} alt={book.ten_sach} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500 ease-out" />
+                            <img 
+                                src={activeImage} 
+                                alt={book.ten_sach} 
+                                className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500 ease-out" 
+                                onError={(e) => { e.target.src = 'https://via.placeholder.com/400x600?text=Lumi+Book'; }}
+                            />
                         </div>
 
                         {allImages.length > 1 && (
@@ -129,8 +142,12 @@ const ProductDetail = () => {
                                     const isLastAndOverflow = index === MAX_THUMBNAILS - 1 && overflowCount > 0;
                                     const isActive = activeImage === img;
                                     return (
-                                        <div key={index} onClick={() => !isLastAndOverflow && setActiveImage(img)} className={`relative w-20 aspect-[3/4] rounded-xl border-2 cursor-pointer overflow-hidden flex-shrink-0 transition-all duration-300 ${isActive && !isLastAndOverflow ? 'border-brand-primary ring-4 ring-brand-primary/20' : 'border-gray-100 hover:border-gray-300'}`}>
-                                            <img src={img} className="w-full h-full object-cover" />
+                                        <div 
+                                            key={index} 
+                                            onClick={() => !isLastAndOverflow && setActiveImage(img)} 
+                                            className={`relative w-20 aspect-[3/4] rounded-xl border-2 cursor-pointer overflow-hidden flex-shrink-0 transition-all duration-300 ${isActive && !isLastAndOverflow ? 'border-brand-primary ring-4 ring-brand-primary/20' : 'border-gray-100 hover:border-gray-300'}`}
+                                        >
+                                            <img src={img} className="w-full h-full object-cover" alt="thumbnail" />
                                             {isLastAndOverflow && (
                                                 <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white backdrop-blur-[2px] transition-colors hover:bg-black/70">
                                                     <span className="font-black text-xl">+{overflowCount + 1}</span>
@@ -216,7 +233,7 @@ const ProductDetail = () => {
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-auto">
-                        <button 
+                            <button 
                                 onClick={handleAddToCart} 
                                 disabled={book.so_luong_ton <= 0 || isAdding} 
                                 className={`py-4 rounded-xl font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 border-2 ${book.so_luong_ton > 0 ? 'bg-white border-brand-primary text-brand-primary hover:bg-brand-primary/5 active:scale-95' : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'}`}
@@ -285,10 +302,6 @@ const ProductDetail = () => {
                                 <div className="w-1.5 h-6 bg-accent-primary rounded-full"></div>
                                 <h2 className="text-xl font-black text-gray-800 uppercase tracking-wide">Có thể bạn sẽ thích</h2>
                             </div>
-                            <div className="flex gap-2">
-                                <button className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-brand-primary hover:border-brand-primary transition-colors"><FontAwesomeIcon icon={faChevronLeft} className="text-xs" /></button>
-                                <button className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-brand-primary hover:border-brand-primary transition-colors"><FontAwesomeIcon icon={faChevronRight} className="text-xs" /></button>
-                            </div>
                         </div>
                         
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -296,12 +309,15 @@ const ProductDetail = () => {
                                 const relDiscounted = relBook.gia_giam > 0 && relBook.gia_giam < relBook.gia_ban;
                                 const relPrice = relDiscounted ? relBook.gia_giam : relBook.gia_ban;
                                 const relPercent = relDiscounted ? Math.round(((relBook.gia_ban - relBook.gia_giam) / relBook.gia_ban) * 100) : 0;
-
                                 return (
                                     <Link to={`/product/${relBook.id}`} key={relBook.id} className="group flex flex-col gap-3">
                                         <div className="aspect-[3/4] rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden relative">
                                             {relDiscounted && <div className="absolute top-2 right-2 bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-full z-10">-{relPercent}%</div>}
-                                            <img src={relBook.hinh_anh || 'https://via.placeholder.com/300x400'} alt={relBook.ten_sach} className="w-full h-full object-contain mix-blend-multiply p-4 group-hover:scale-110 transition-transform duration-500" />
+                                            <img 
+                                                src={relBook.hinh_anh ? `${IMAGE_BASE_URL}${relBook.hinh_anh}` : 'https://via.placeholder.com/300x400'} 
+                                                alt={relBook.ten_sach} 
+                                                className="w-full h-full object-contain mix-blend-multiply p-4 group-hover:scale-110 transition-transform duration-500" 
+                                            />
                                         </div>
                                         <div className="flex flex-col">
                                             <h3 className="font-bold text-gray-800 line-clamp-2 text-sm group-hover:text-brand-primary transition-colors min-h-[40px]">{relBook.ten_sach}</h3>

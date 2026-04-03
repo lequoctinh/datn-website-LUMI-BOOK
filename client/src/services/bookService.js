@@ -4,9 +4,12 @@ const API_URL = 'http://localhost:5000/api/books';
 
 const getAuthHeaders = () => {
     const token = localStorage.getItem('lumi_token');
-    return { headers: { Authorization: `Bearer ${token}` } };
+    return { 
+        headers: { 
+            Authorization: `Bearer ${token}`,
+        } 
+    };
 };
-
 const bookService = {
     getBooksAdmin: async (page = 1, limit = 10, search = '') => {
         const response = await axios.get(`${API_URL}/admin?page=${page}&limit=${limit}&search=${search}`, getAuthHeaders());
@@ -17,12 +20,12 @@ const bookService = {
         const response = await axios.get(`${API_URL}/admin/${id}`, getAuthHeaders());
         return response.data;
     },
-    createBook: async (data) => {
-        const response = await axios.post(`${API_URL}/admin`, data, getAuthHeaders());
+    createBook: async (formData) => {
+        const response = await axios.post(`${API_URL}/admin`, formData, getAuthHeaders());
         return response.data;
     },
-    updateBook: async (id, data) => {
-        const response = await axios.put(`${API_URL}/admin/${id}`, data, getAuthHeaders());
+    updateBook: async (id, formData) => {
+        const response = await axios.put(`${API_URL}/admin/${id}`, formData, getAuthHeaders());
         return response.data;
     },
     toggleStatus: async (id, trang_thai) => {

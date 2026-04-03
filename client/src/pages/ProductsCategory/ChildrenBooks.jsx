@@ -8,7 +8,7 @@ import {
 
 import bookService from '../../services/bookService';
 import categoryService from '../../services/categoryService';
-import { useCart } from '../../context/CartContext';
+import { useCart } from '../../context/cartContext';
 
 const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -17,7 +17,7 @@ const formatPrice = (price) => {
     }).format(price).replace('₫', 'đ');
 };
 
-const ChildrenBooks = () => {
+function ChildrenBooks() {
     const navigate = useNavigate();
     const { addToCart } = useCart();
     
@@ -44,7 +44,7 @@ const ChildrenBooks = () => {
                     setCategories(res.data);
                 }
             } catch (error) {
-                console.error("Lỗi lấy danh mục:", error);
+                console.error(error);
             }
         };
         fetchCategories();
@@ -60,7 +60,7 @@ const ChildrenBooks = () => {
                     setPagination(res.pagination);
                 }
             } catch (error) {
-                console.error("Lỗi lấy danh sách sách:", error);
+                console.error(error);
             } finally {
                 setLoading(false);
             }
@@ -88,8 +88,6 @@ const ChildrenBooks = () => {
             8: '/category/biography',
             9: '/category/mentality',
             10: '/category/life'
-
-
         };
 
         const targetPath = categoryMap[id];
@@ -109,6 +107,7 @@ const ChildrenBooks = () => {
                     <span className="text-brand-primary font-bold">Sách Thiếu Nhi</span>
                 </div>
             </div>
+
             <div className="bg-white py-12 mb-8 border-b border-gray-50">
                 <div className="max-w-[1200px] mx-auto px-4">
                     <div className="flex flex-col md:flex-row justify-between items-end gap-6">
@@ -161,6 +160,7 @@ const ChildrenBooks = () => {
                                     ))}
                                 </div>
                             </div>
+
                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                                 <h3 className="text-sm font-black uppercase tracking-widest mb-6 flex items-center gap-2 border-b border-gray-50 pb-4">
                                     <FontAwesomeIcon icon={faThLarge} className="text-brand-primary" />
@@ -190,6 +190,7 @@ const ChildrenBooks = () => {
                             </div>
                         </div>
                     </aside>
+
                     <main className="flex-1">
                         <div className="flex justify-between items-center mb-10 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                             <span className="text-sm text-gray-500 font-medium">
@@ -210,6 +211,7 @@ const ChildrenBooks = () => {
                                 <FontAwesomeIcon icon={faSortAmountDown} className="text-brand-primary text-xs" />
                             </div>
                         </div>
+
                         {loading ? (
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
                                 {[...Array(6)].map((_, i) => (
@@ -227,14 +229,14 @@ const ChildrenBooks = () => {
                                         key={book.id} 
                                         className="group bg-white rounded-2xl p-3 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full"
                                     >
-                                        <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 bg-white">
+                                        <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 bg-gray-50 group-hover:shadow-md transition-all duration-500">
                                             <img 
                                                 src={book.hinh_anh} 
                                                 alt={book.ten_sach} 
-                                                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" 
+                                                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                                                loading="lazy"
                                             />
-                                            
-                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
                                                 <button 
                                                     onClick={(e) => handleAddToCart(e, book)}
                                                     className="w-10 h-10 bg-white text-brand-primary rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300 shadow-lg"
@@ -248,9 +250,8 @@ const ChildrenBooks = () => {
                                                     <FontAwesomeIcon icon={faEye} />
                                                 </button>
                                             </div>
-
                                             {book.gia_giam > 0 && (
-                                                <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-md">
+                                                <div className="absolute top-2 right-2 bg-red-500 text-white text-[11px] font-bold px-2 py-1 rounded-lg shadow-sm">
                                                     -{Math.round(((book.gia_ban - book.gia_giam) / book.gia_ban) * 100)}%
                                                 </div>
                                             )}
@@ -260,25 +261,21 @@ const ChildrenBooks = () => {
                                             <p className="text-[10px] uppercase tracking-widest text-brand-primary font-bold mb-1 opacity-60 truncate">
                                                 {book.tac_gia || 'Sách Thiếu Nhi'}
                                             </p>
-
                                             <h3 
                                                 onClick={() => navigate(`/product/${book.id}`)}
                                                 className="font-heading text-sm sm:text-base text-text-primary line-clamp-2 hover:text-brand-primary transition-colors cursor-pointer mb-2"
                                             >
                                                 {book.ten_sach}
                                             </h3>
-                                            
                                             <div className="mt-auto pt-2 border-t border-dashed border-gray-100">
                                                 {book.gia_giam > 0 ? (
                                                     <div className="flex flex-col items-center">
                                                         <span className="text-xs text-gray-400 line-through mb-1">
                                                             {formatPrice(book.gia_ban)}
                                                         </span>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-lg font-bold text-red-500">
-                                                                {formatPrice(book.gia_giam)}
-                                                            </span>
-                                                        </div>
+                                                        <span className="text-lg font-bold text-red-500">
+                                                            {formatPrice(book.gia_giam)}
+                                                        </span>
                                                     </div>
                                                 ) : (
                                                     <span className="text-lg font-bold text-text-primary">
@@ -291,6 +288,7 @@ const ChildrenBooks = () => {
                                 ))}
                             </div>
                         )}
+
                         {pagination.totalPages > 1 && (
                             <div className="mt-20 flex justify-center items-center gap-4">
                                 <button 
@@ -329,6 +327,6 @@ const ChildrenBooks = () => {
             </div>
         </div>
     );
-};
+}
 
 export default ChildrenBooks;
