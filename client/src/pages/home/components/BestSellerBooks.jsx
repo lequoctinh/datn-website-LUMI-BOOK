@@ -49,7 +49,6 @@ return (
     <section className="w-full bg-[#FDFBF7] py-24 flex justify-center overflow-visible">
       <div className="w-full max-w-[1200px] px-4">
         
-        {/* Header Section */}
         <div className="flex flex-col items-center mb-16">
             <span className="text-accent-primary font-bold tracking-[0.3em] text-xs uppercase mb-2">
                 Lumi Premium

@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
     faTachometerAlt, faBook, faTags, faShoppingCart, 
     faUsers, faStar, faImage, faSignOutAlt, faBookOpen,
-    faUserPen, faBuilding 
+    faUserPen, faBuilding,faTicketAlt 
 } from '@fortawesome/free-solid-svg-icons';
 import { useUser } from '../../context/UserContext';
 
@@ -21,6 +21,7 @@ const AdminSidebar = () => {
         { title: 'Đơn hàng', icon: faShoppingCart, path: '/admin/orders' },
         { title: 'Khách hàng', icon: faUsers, path: '/admin/customers' },
         { title: 'Đánh giá', icon: faStar, path: '/admin/reviews' },
+        { title: 'Khuyến mãi', icon: faTicketAlt, path: '/admin/vouchers' },
         { title: 'Banner', icon: faImage, path: '/admin/banners' },
     ];
 
