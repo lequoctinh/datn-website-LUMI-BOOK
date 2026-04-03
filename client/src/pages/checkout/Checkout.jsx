@@ -7,9 +7,6 @@ import axiosClient from '../../utils/axiosClient';
 const Checkout = () => {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
-  const [voucherCode, setVoucherCode] = useState('');
-  const [appliedVoucher, setAppliedVoucher] = useState(null);
-  const [voucherError, setVoucherError] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -22,7 +19,8 @@ const Checkout = () => {
 
   const validateForm = () => {
     let newErrors = {};
-    const nameRegex = /^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂẾưăạảấầẩẫậắằẳẵặẹẻẽềềểếỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪỬỮỰỳỵỷỹýÝ\s]+$/;
+    const nameRegex = /^[\p{L}\s]+$/u;
+
     if (!formData.ho_ten_nhan.trim()) {
       newErrors.ho_ten_nhan = "Họ tên không được để trống";
     } else if (!nameRegex.test(formData.ho_ten_nhan)) {
@@ -73,8 +71,7 @@ const Checkout = () => {
 
   const shippingFee = 0;
   const subtotal = calculateSubtotal();
-const discountAmount = appliedVoucher ? Number(appliedVoucher.so_tien_giam) : 0;
-const totalAmount = subtotal + shippingFee - discountAmount;
+  const totalAmount = subtotal + shippingFee;
 
   const handleSubmit = async () => {
     // Gọi hàm check lỗi
@@ -91,9 +88,7 @@ const totalAmount = subtotal + shippingFee - discountAmount;
     try {
       const payload = {
         ...formData,
-        phuong_thuc_thanh_toan: paymentMethod,
-        ma_khuyen_mai_id: appliedVoucher ? appliedVoucher.id : null, 
-        tong_tien: totalAmount 
+        phuong_thuc_thanh_toan: paymentMethod
       };
       const response = await axiosClient.post('/checkout/place-order', payload);
       if (response.success) {
@@ -105,40 +100,6 @@ const totalAmount = subtotal + shippingFee - discountAmount;
       setLoading(false);
     }
   };
-  const handleApplyVoucher = async () => {
-      if (!voucherCode.trim()) {
-          setVoucherError("Vui lòng nhập mã giảm giá");
-          return;
-      }
-
-      try {
-          setVoucherError('');
-          const response = await axiosClient.post('/admin/vouchers/check', {
-              ma_code: voucherCode, 
-              tong_tien_don_hang: subtotal 
-          });
-
-          if (response.success) {
-              setAppliedVoucher(response.data); 
-              setVoucherError('');
-          }
-      } catch (error) {
-          setVoucherError(error.response?.data?.message || "Mã giảm giá hết hạn hoặc không tồn tại");
-          setAppliedVoucher(null);
-      }
-  };
-
-const handleRemoveVoucher = () => {
-    setAppliedVoucher(null);
-    setVoucherCode('');
-};
-useEffect(() => {
-    if (appliedVoucher && subtotal < appliedVoucher.don_hang_toi_thieu) {
-        setAppliedVoucher(null);
-        setVoucherCode(''); 
-        setVoucherError(`Đơn hàng từ ${Number(appliedVoucher.don_hang_toi_thieu).toLocaleString()}đ mới dùng được mã này.`);
-    }
-}, [subtotal, appliedVoucher]);
   return (
     <div className="min-h-screen bg-background py-10 px-4 sm:px-6 lg:px-8 font-body">
       <div className="max-w-6xl mx-auto">
@@ -260,45 +221,12 @@ useEffect(() => {
                   <span>Phí vận chuyển</span>
                   <span className="font-medium text-state-success">Miễn phí toàn quốc</span>
                 </div>
-                {appliedVoucher && (
-                  <div className="flex justify-between text-state-success font-medium py-2">
-                    <span>Giảm giá voucher</span>
-                    <span>-{Number(appliedVoucher.so_tien_giam).toLocaleString()} đ</span>
-                  </div>
-                )}
-
                 <div className="flex justify-between text-lg font-bold pt-2">
                   <span className="text-text-primary">Tổng tiền</span>
                   <span className="text-accent-primary">{totalAmount.toLocaleString()} đ</span>
                 </div>
               </div>
-                <div className="mb-6">
-                  <div className="flex gap-2">
-                      <input 
-                          type="text" 
-                          placeholder="Mã giảm giá (Ví dụ: LUMI20)"
-                          value={voucherCode}
-                          onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                          className={`flex-1 px-3 py-2 border rounded-lg outline-none uppercase font-bold text-sm ${voucherError ? 'border-red-500' : 'border-border-default focus:border-brand-primary'}`}
-                      />
-                      <button 
-                          onClick={handleApplyVoucher}
-                          className="bg-brand-primary text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-opacity-90 transition-all"
-                      >
-                          Áp dụng
-                      </button>
-                  </div>
-                  {voucherError && <p className="text-red-500 text-[11px] mt-1 italic">{voucherError}</p>}
-                  
-                  {appliedVoucher && (
-                      <div className="mt-2 flex justify-between items-center bg-green-50 border border-green-200 p-2 rounded-lg">
-                          <span className="text-green-700 text-xs font-bold italic">
-                              ✓ Đã áp dụng mã {appliedVoucher.ten_khuyen_mai}
-                          </span>
-                          <button onClick={handleRemoveVoucher} className="text-red-500 text-xs hover:underline">Gỡ</button>
-                      </div>
-                  )}
-              </div>
+
               <button 
                 onClick={handleSubmit}
                 disabled={loading || cartItems.length === 0}
