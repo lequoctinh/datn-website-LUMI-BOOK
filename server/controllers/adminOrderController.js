@@ -1,6 +1,5 @@
 const { pool } = require('../config/db');
-
-// 1. Lấy toàn bộ đơn hàng 
+// 1. Lấy toàn bộ đơn hàng ctl
 exports.getAllOrders = async (req, res) => {
     try {
         const [rows] = await pool.execute(
@@ -15,7 +14,7 @@ exports.getAllOrders = async (req, res) => {
     }
 };
 
-// 2. Cập nhật trạng thái đơn hàng 
+// 2. Cập nhật trạng thái đơn hàng ctl
 exports.updateOrderStatus = async (req, res) => {
     const { id } = req.params;
     const { trang_thai } = req.body; 
@@ -77,7 +76,7 @@ exports.updateOrderStatus = async (req, res) => {
     }
 };
 
-// 3. Lấy chi tiết đơn hàng 
+// 3. Lấy chi tiết đơn hàng ctl
 exports.getOrderDetail = async (req, res) => {
     const { id } = req.params;
     try {
@@ -103,6 +102,7 @@ exports.getOrderDetail = async (req, res) => {
     }
 };
 
+// api Dashboard
 exports.getDashboardStats = async (req, res) => {
     try {
         const { startDate, endDate } = req.query;
