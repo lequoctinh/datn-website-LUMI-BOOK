@@ -80,10 +80,7 @@ const NewArrivals = () => {
                                     <div className="ln-pages"></div>
                                     <div className="ln-cover">
                                         <div className="ln-lighting"></div>
-                                        <img 
-                                            src={book.hinh_anh} 
-                                            alt={book.ten_sach} 
-                                        />
+                                            <img src={book.hinh_anh ? `http://localhost:5000/uploads/products/${book.hinh_anh}` : 'https://via.placeholder.com/300x400'} alt={book.ten_sach} />
                                         <div className="absolute inset-0 bg-gradient-to-tr from-brand-dark/10 to-transparent pointer-events-none"></div>
                                     </div>
                                 </div>

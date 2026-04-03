@@ -119,12 +119,45 @@ const BookManager = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
         try {
-            const res = editId ? await bookService.updateBook(editId, formData) : await bookService.createBook(formData);
-            if (res.success) { toast.success('Thành công'); setShowModal(false); fetchBooks(pagination.page, search); }
-        } catch (error) { toast.error(error.response?.data?.message || 'Lỗi'); }
-    };
+            const data = new FormData();
+            Object.keys(formData).forEach(key => {
+                if (!['hinh_anh', 'album_anh', 'danh_muc_ids', 'tac_gia_ids'].includes(key)) {
+                    data.append(key, formData[key]);
+                }
+            });
+            data.append('danh_muc_ids', JSON.stringify(formData.danh_muc_ids));
+            data.append('tac_gia_ids', JSON.stringify(formData.tac_gia_ids));
+            if (formData.hinh_anh instanceof File) {
+                data.append('hinh_anh', formData.hinh_anh);
+            }
+            if (Array.isArray(formData.album_anh)) {
+                formData.album_anh.forEach((file) => {
+                    if (file instanceof File) {
+                        data.append('album_anh', file);
+                    }
+                });
+            }
+            const res = editId 
+                ? await bookService.updateBook(editId, data) 
+                : await bookService.createBook(data);
 
+            if (res.success) {
+                toast.success('Thành công');
+                setShowModal(false);
+                fetchBooks(pagination.page, search);
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Lỗi lưu dữ liệu');
+        } finally {
+            setLoading(false);
+        }
+    };
+    const handleAlbumFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setFormData({ ...formData, album_anh: [...formData.album_anh, ...files] });
+    };
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 min-h-[calc(100vh-100px)]">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
@@ -164,7 +197,7 @@ const BookManager = () => {
                                 <td className="p-4 text-gray-500">#{book.id}</td>
                                 <td className="p-4">
                                     <div className="flex items-center gap-3 w-64">
-                                        <img src={book.hinh_anh || 'https://via.placeholder.com/150'} className="w-10 h-14 object-cover rounded shadow-sm border" alt="" />
+                                        <img src={book.hinh_anh ? `http://localhost:5000/uploads/products/${book.hinh_anh}` : 'https://via.placeholder.com/150'} className="w-10 h-14 object-cover rounded shadow-sm border" alt={book.ten_sach} />
                                         <span className="font-bold text-gray-800 whitespace-normal line-clamp-2">{book.ten_sach}</span>
                                     </div>
                                 </td>
@@ -248,13 +281,48 @@ const BookManager = () => {
                                         <div><label className="text-xs font-bold uppercase text-gray-500">Số trang</label>
                                         <input type="number" value={formData.so_trang} onChange={e => setFormData({...formData, so_trang: e.target.value})} className="w-full p-2.5 bg-gray-50 border rounded-xl outline-none" /></div>
                                     </div>
-                                    <div><label className="text-xs font-bold uppercase text-gray-500">Ảnh đại diện (URL)</label>
-                                    <input type="text" value={formData.hinh_anh} onChange={e => setFormData({...formData, hinh_anh: e.target.value})} className="w-full p-2.5 bg-gray-50 border rounded-xl outline-none" placeholder="https://..." /></div>
+                                    <div>
+                                        <label className="text-xs font-bold uppercase text-gray-500">Ảnh đại diện *</label>
+                                        <input 
+                                            type="file" 
+                                            accept="image/*"
+                                            onChange={e => setFormData({...formData, hinh_anh: e.target.files[0]})} 
+                                            className="w-full p-2 text-sm bg-gray-50 border rounded-xl outline-none" 
+                                        />
+                                        {formData.hinh_anh && (
+                                            <img 
+                                                src={formData.hinh_anh instanceof File ? URL.createObjectURL(formData.hinh_anh) : `http://localhost:5000/uploads/products/${formData.hinh_anh}`} 
+                                                className="mt-2 w-20 h-28 object-cover rounded border" 
+                                                alt="Preview" 
+                                            />
+                                        )}
+                                    </div>
                                     
                                     <div>
-                                        <div className="flex justify-between items-center mb-1">
+                                        <div>
                                             <label className="text-xs font-bold uppercase text-gray-500">Album ảnh phụ</label>
-                                            <button type="button" onClick={handleAddAlbumImage} className="text-xs text-brand-primary font-bold hover:underline">+ Thêm ảnh</button>
+                                            <input 
+                                                type="file" 
+                                                multiple 
+                                                accept="image/*"
+                                                onChange={handleAlbumFileChange}
+                                                className="w-full p-2 text-sm bg-gray-50 border rounded-xl outline-none mb-2"
+                                            />
+                                            <div className="flex flex-wrap gap-2">
+                                                {formData.album_anh.map((file, index) => (
+                                                    <div key={index} className="relative group">
+                                                        <img 
+                                                            src={file instanceof File ? URL.createObjectURL(file) : `http://localhost:5000/uploads/products/${file}`} 
+                                                            className="w-16 h-16 object-cover rounded border" 
+                                                        />
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => handleRemoveAlbumImage(index)}
+                                                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-[10px]"
+                                                        >✕</button>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                         <div className="space-y-2 max-h-32 overflow-y-auto custom-scrollbar pr-2">
                                             {formData.album_anh.map((url, index) => (

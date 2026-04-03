@@ -17,6 +17,36 @@ const formatPrice = (price) => {
     }).format(price).replace('₫', 'đ');
 };
 
+const BookImage = ({ src, alt, discount }) => {
+    const [isLoaded, setIsLoaded] = useState(false);
+    const [error, setError] = useState(false);
+    const fallbackImage = "https://via.placeholder.com/300x400?text=Lumi-Book";
+
+    return (
+        <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 bg-gray-50 shadow-inner">
+            {!isLoaded && !error && (
+                <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+            )}
+            <img 
+                src={error ? fallbackImage : src} 
+                alt={alt} 
+                onLoad={() => setIsLoaded(true)}
+                onError={() => setError(true)}
+                className={`w-full h-full object-cover transform transition-all duration-700 ease-out
+                    ${isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}
+                    group-hover:scale-110`} 
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            {discount > 0 && (
+                <div className="absolute top-3 left-3 z-10 bg-red-500/90 backdrop-blur-sm text-white text-[11px] font-black px-2 py-1 rounded-lg shadow-lg flex flex-col items-center leading-tight">
+                    <span className="text-[8px] uppercase opacity-80">Giảm</span>
+                    {discount}%
+                </div>
+            )}
+        </div>
+    );
+};
+
 const LanguageBooks = () => {
     const navigate = useNavigate();
     const { addToCart } = useCart();
@@ -79,7 +109,6 @@ const LanguageBooks = () => {
 
     const handleCategoryClick = (id) => {
         if (id === LANGUAGE_CATEGORY_ID) return;
-        
         const categoryMap = { 
             4: '/category/literature',
             5: '/category/economy', 
@@ -88,10 +117,7 @@ const LanguageBooks = () => {
             8: '/category/biography',
             9: '/category/mentality',
             10: '/category/life'
-
-
         };
-
         const targetPath = categoryMap[id];
         if (targetPath) {
             navigate(targetPath);
@@ -133,7 +159,6 @@ const LanguageBooks = () => {
 
             <div className="max-w-[1200px] mx-auto px-4 pb-20">
                 <div className="flex flex-col lg:flex-row gap-10">
-                    
                     <aside className="w-full lg:w-[280px] shrink-0">
                         <div className="sticky top-28 space-y-6">
                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -230,57 +255,52 @@ const LanguageBooks = () => {
                                 {books.map((book) => (
                                     <div 
                                         key={book.id} 
-                                        className="group bg-white rounded-2xl p-3 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full"
+                                        className="group bg-white rounded-2xl p-3 border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 flex flex-col h-full"
                                     >
-                                        <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 bg-white">
-                                            <img 
+                                        <div className="relative">
+                                            <BookImage 
                                                 src={book.hinh_anh} 
                                                 alt={book.ten_sach} 
-                                                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" 
+                                                discount={book.gia_giam > 0 ? Math.round(((book.gia_ban - book.gia_giam) / book.gia_ban) * 100) : 0}
                                             />
-                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                            <div className="absolute inset-0 z-20 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto">
                                                 <button 
                                                     onClick={(e) => handleAddToCart(e, book)}
-                                                    className="w-10 h-10 bg-white text-brand-primary rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300 shadow-lg"
+                                                    className="w-11 h-11 bg-white text-brand-primary rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all transform translate-y-8 group-hover:translate-y-0 duration-500 shadow-xl"
                                                 >
                                                     <FontAwesomeIcon icon={faCartPlus} />
                                                 </button>
                                                 <button 
                                                     onClick={() => navigate(`/product/${book.id}`)}
-                                                    className="w-10 h-10 bg-white text-brand-primary rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300 delay-75 shadow-lg"
+                                                    className="w-11 h-11 bg-white text-brand-primary rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all transform translate-y-8 group-hover:translate-y-0 duration-500 delay-75 shadow-xl"
                                                 >
                                                     <FontAwesomeIcon icon={faEye} />
                                                 </button>
                                             </div>
-                                            {book.gia_giam > 0 && (
-                                                <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-md">
-                                                    -{Math.round(((book.gia_ban - book.gia_giam) / book.gia_ban) * 100)}%
-                                                </div>
-                                            )}
                                         </div>
 
                                         <div className="flex flex-col flex-grow px-1 text-center">
-                                            <p className="text-[10px] uppercase tracking-widest text-brand-primary font-bold mb-1 opacity-60 truncate">
+                                            <p className="text-[10px] uppercase tracking-[0.15em] text-brand-primary font-bold mb-1.5 opacity-70 truncate">
                                                 {book.tac_gia || 'NXB Ngoại Ngữ'}
                                             </p>
                                             <h3 
                                                 onClick={() => navigate(`/product/${book.id}`)}
-                                                className="font-heading text-sm sm:text-base text-text-primary line-clamp-2 hover:text-brand-primary transition-colors cursor-pointer mb-2"
+                                                className="font-heading text-[15px] leading-snug text-text-primary line-clamp-2 hover:text-brand-primary transition-colors cursor-pointer mb-3 font-semibold"
                                             >
                                                 {book.ten_sach}
                                             </h3>
-                                            <div className="mt-auto pt-2 border-t border-dashed border-gray-100">
+                                            <div className="mt-auto pt-3 border-t border-dashed border-gray-100">
                                                 {book.gia_giam > 0 ? (
                                                     <div className="flex flex-col items-center">
-                                                        <span className="text-xs text-gray-400 line-through mb-1">
+                                                        <span className="text-[12px] text-gray-400 line-through mb-0.5">
                                                             {formatPrice(book.gia_ban)}
                                                         </span>
-                                                        <span className="text-lg font-bold text-red-500">
+                                                        <span className="text-lg font-black text-red-500 tracking-tight">
                                                             {formatPrice(book.gia_giam)}
                                                         </span>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-lg font-bold text-text-primary">
+                                                    <span className="text-lg font-black text-text-primary tracking-tight">
                                                         {formatPrice(book.gia_ban)}
                                                     </span>
                                                 )}
@@ -290,6 +310,7 @@ const LanguageBooks = () => {
                                 ))}
                             </div>
                         )}
+
                         <div className="mt-20 flex justify-center items-center gap-4">
                             <button 
                                 disabled={filters.page === 1}

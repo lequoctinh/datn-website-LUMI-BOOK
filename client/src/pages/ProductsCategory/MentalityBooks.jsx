@@ -10,6 +10,7 @@ import bookService from '../../services/bookService';
 import categoryService from '../../services/categoryService';
 import { useCart } from '../../context/CartContext';
 
+// Giữ hàm format giá bên ngoài component để tránh khởi tạo lại
 const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', {
         style: 'currency',
@@ -17,7 +18,7 @@ const formatPrice = (price) => {
     }).format(price).replace('₫', 'đ');
 };
 
-const MentalityBooks = () => {
+function MentalityBooks() {
     const navigate = useNavigate();
     const { addToCart } = useCart();
     
@@ -37,35 +38,40 @@ const MentalityBooks = () => {
     });
 
     useEffect(() => {
+        let isMounted = true;
         const fetchCategories = async () => {
             try {
                 const res = await categoryService.getAllCategories();
-                if (res.success) {
+                if (res.success && isMounted) {
                     setCategories(res.data);
                 }
             } catch (error) {
-                console.error(error);
+                console.error("Error fetching categories:", error);
             }
         };
         fetchCategories();
+        return () => { isMounted = false; };
     }, []);
 
     useEffect(() => {
+        let isMounted = true;
         const fetchBooks = async () => {
             setLoading(true);
             try {
                 const res = await bookService.getAllBooks(filters);
-                if (res.success) {
+                if (res.success && isMounted) {
                     setBooks(res.data);
-                    setPagination(res.pagination);
+                    setPagination(res.pagination || { total: 0, totalPages: 1 });
                 }
             } catch (error) {
-                console.error(error);
+                console.error("Error fetching books:", error);
             } finally {
-                setLoading(false);
+                if (isMounted) setLoading(false);
             }
         };
         fetchBooks();
+        window.scrollTo({ top: 0, behavior: 'smooth' }); 
+        return () => { isMounted = false; };
     }, [filters]);
 
     const handleFilterChange = (key, value) => {
@@ -77,10 +83,10 @@ const MentalityBooks = () => {
         addToCart(book.id, 1);
     };
 
-    const handleCategoryClick = (id) => {
+    const handleCategoryNavigation = (id) => {
         if (id === MENTALITY_CATEGORY_ID) return;
         
-        const categoryMap = { 
+        const routes = { 
             4: '/category/literature',
             5: '/category/economy', 
             6: '/category/children',
@@ -88,15 +94,10 @@ const MentalityBooks = () => {
             8: '/category/biography',
             9: '/category/mentality',
             10: '/category/life'
-
         };
 
-        const targetPath = categoryMap[id];
-        if (targetPath) {
-            navigate(targetPath);
-        } else {
-            navigate(`/products?category_id=${id}`);
-        }
+        const path = routes[id] || `/products?category_id=${id}`;
+        navigate(path);
     };
 
     return (
@@ -117,13 +118,13 @@ const MentalityBooks = () => {
                                 Tâm lý - Kỹ năng
                             </h1>
                             <p className="text-text-muted text-lg font-light leading-relaxed">
-                                Cải thiện bản thân, thấu hiểu tâm lý và rèn luyện những kỹ năng cần thiết để thành công hơn trong cuộc sống và sự nghiệp.
+                                Khám phá kho tàng kiến thức giúp cải thiện bản thân, thấu hiểu tâm lý và rèn luyện kỹ năng sinh tồn trong thời đại mới.
                             </p>
                         </div>
                         <div className="hidden md:block">
                             <div className="flex items-center gap-2 text-brand-primary font-bold text-sm bg-brand-primary/5 px-4 py-2 rounded-full">
                                 <FontAwesomeIcon icon={faCheckCircle} />
-                                <span>Phát triển bản thân</span>
+                                <span>Kiến thức chọn lọc</span>
                             </div>
                         </div>
                     </div>
@@ -150,9 +151,9 @@ const MentalityBooks = () => {
                                             <input 
                                                 type="radio" 
                                                 name="price" 
+                                                className="w-4 h-4 accent-brand-primary cursor-pointer"
                                                 checked={filters.price_range === range.id}
                                                 onChange={() => handleFilterChange('price_range', range.id)}
-                                                className="w-4 h-4 border-gray-300 text-brand-primary focus:ring-brand-primary cursor-pointer" 
                                             />
                                             <span className="ml-3 text-[14px] text-gray-600 group-hover:text-brand-primary transition-colors font-medium">
                                                 {range.label}
@@ -165,24 +166,24 @@ const MentalityBooks = () => {
                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                                 <h3 className="text-sm font-black uppercase tracking-widest mb-6 flex items-center gap-2 border-b border-gray-50 pb-4">
                                     <FontAwesomeIcon icon={faThLarge} className="text-brand-primary" />
-                                    Danh mục
+                                    Danh mục khác
                                 </h3>
                                 <div className="flex flex-col gap-2">
                                     {categories.map((cat) => (
                                         <button
                                             key={cat.id}
-                                            onClick={() => handleCategoryClick(cat.id)}
+                                            onClick={() => handleCategoryNavigation(cat.id)}
                                             className={`text-left px-4 py-3 rounded-xl text-[14px] transition-all duration-300 flex items-center justify-between group ${
                                                 cat.id === MENTALITY_CATEGORY_ID 
-                                                ? 'bg-brand-primary text-white font-bold shadow-lg shadow-brand-primary/20' 
+                                                ? 'bg-brand-primary text-white font-bold shadow-md shadow-brand-primary/20' 
                                                 : 'text-gray-600 hover:bg-brand-primary/5 hover:text-brand-primary font-medium'
                                             }`}
                                         >
                                             {cat.ten_danh_muc}
                                             <FontAwesomeIcon 
                                                 icon={faChevronRight} 
-                                                className={`text-[10px] transition-transform duration-300 ${
-                                                    cat.id === MENTALITY_CATEGORY_ID ? 'translate-x-0' : '-translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100'
+                                                className={`text-[10px] transition-transform ${
+                                                    cat.id === MENTALITY_CATEGORY_ID ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                                                 }`} 
                                             />
                                         </button>
@@ -193,84 +194,86 @@ const MentalityBooks = () => {
                     </aside>
 
                     <main className="flex-1">
-                        <div className="flex justify-between items-center mb-10 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                        <div className="flex justify-between items-center mb-8 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                             <span className="text-sm text-gray-500 font-medium">
-                                Tìm thấy <b className="text-text-primary">{pagination.total}</b> cuốn sách
+                                Tìm thấy <b className="text-text-primary">{pagination.total}</b> sản phẩm
                             </span>
                             <div className="flex items-center gap-3">
-                                <span className="text-xs font-bold text-gray-400 uppercase">Sắp xếp:</span>
+                                <span className="text-xs font-bold text-gray-400 uppercase hidden sm:inline">Sắp xếp:</span>
                                 <select 
                                     value={filters.sort_by}
                                     onChange={(e) => handleFilterChange('sort_by', e.target.value)}
-                                    className="bg-transparent border-none text-sm font-bold focus:ring-0 p-0 cursor-pointer text-brand-primary appearance-none"
+                                    className="bg-transparent border-none text-sm font-bold focus:ring-0 cursor-pointer text-brand-primary"
                                 >
                                     <option value="newest">Mới nhất</option>
-                                    <option value="price-asc">Giá: Thấp đến Cao</option>
-                                    <option value="price-desc">Giá: Cao đến Thấp</option>
-                                    <option value="best-seller">Bán chạy nhất</option>
+                                    <option value="price-asc">Giá tăng dần</option>
+                                    <option value="price-desc">Giá giảm dần</option>
+                                    <option value="best-seller">Phổ biến nhất</option>
                                 </select>
                                 <FontAwesomeIcon icon={faSortAmountDown} className="text-brand-primary text-xs" />
                             </div>
                         </div>
-
                         {loading ? (
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                                 {[...Array(6)].map((_, i) => (
-                                    <div key={i} className="bg-white p-4 rounded-3xl border border-gray-100 space-y-4">
-                                        <div className="aspect-[3/4] bg-gray-100 animate-pulse rounded-2xl"></div>
-                                        <div className="h-4 bg-gray-100 animate-pulse rounded w-2/3 mx-auto"></div>
-                                        <div className="h-4 bg-gray-100 animate-pulse rounded w-1/2 mx-auto"></div>
+                                    <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 animate-pulse">
+                                        <div className="aspect-[3/4] bg-gray-100 rounded-xl mb-4"></div>
+                                        <div className="h-4 bg-gray-100 rounded w-3/4 mb-2 mx-auto"></div>
+                                        <div className="h-4 bg-gray-100 rounded w-1/2 mx-auto"></div>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
-                                {books.map((book) => (
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                                {books.length > 0 ? books.map((book) => (
                                     <div 
                                         key={book.id} 
                                         className="group bg-white rounded-2xl p-3 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full"
                                     >
-                                        <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 bg-white">
+                                        <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 bg-gray-50">
                                             <img 
                                                 src={book.hinh_anh} 
                                                 alt={book.ten_sach} 
-                                                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" 
+                                                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" 
+                                                loading="lazy"
                                             />
-                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
                                                 <button 
                                                     onClick={(e) => handleAddToCart(e, book)}
-                                                    className="w-10 h-10 bg-white text-brand-primary rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300 shadow-lg"
+                                                    className="w-10 h-10 bg-white text-brand-primary rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all shadow-md"
+                                                    title="Thêm vào giỏ"
                                                 >
                                                     <FontAwesomeIcon icon={faCartPlus} />
                                                 </button>
                                                 <button 
                                                     onClick={() => navigate(`/product/${book.id}`)}
-                                                    className="w-10 h-10 bg-white text-brand-primary rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300 delay-75 shadow-lg"
+                                                    className="w-10 h-10 bg-white text-brand-primary rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all shadow-md"
+                                                    title="Xem chi tiết"
                                                 >
                                                     <FontAwesomeIcon icon={faEye} />
                                                 </button>
                                             </div>
                                             {book.gia_giam > 0 && (
-                                                <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-md">
+                                                <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm">
                                                     -{Math.round(((book.gia_ban - book.gia_giam) / book.gia_ban) * 100)}%
                                                 </div>
                                             )}
                                         </div>
 
                                         <div className="flex flex-col flex-grow px-1 text-center">
-                                            <p className="text-[10px] uppercase tracking-widest text-brand-primary font-bold mb-1 opacity-60 truncate">
-                                                {book.tac_gia || 'Kỹ năng sống'}
+                                            <p className="text-[10px] uppercase tracking-widest text-brand-primary/60 font-bold mb-1 truncate">
+                                                {book.tac_gia || 'Đang cập nhật'}
                                             </p>
                                             <h3 
                                                 onClick={() => navigate(`/product/${book.id}`)}
-                                                className="font-heading text-sm sm:text-base text-text-primary line-clamp-2 hover:text-brand-primary transition-colors cursor-pointer mb-2"
+                                                className="font-heading text-sm sm:text-base text-text-primary line-clamp-2 hover:text-brand-primary transition-colors cursor-pointer mb-2 h-10 sm:h-12"
                                             >
                                                 {book.ten_sach}
                                             </h3>
-                                            <div className="mt-auto pt-2 border-t border-dashed border-gray-100">
+                                            <div className="mt-auto pt-3 border-t border-dashed border-gray-100">
                                                 {book.gia_giam > 0 ? (
                                                     <div className="flex flex-col items-center">
-                                                        <span className="text-xs text-gray-400 line-through mb-1">
+                                                        <span className="text-xs text-gray-400 line-through">
                                                             {formatPrice(book.gia_ban)}
                                                         </span>
                                                         <span className="text-lg font-bold text-red-500">
@@ -285,38 +288,39 @@ const MentalityBooks = () => {
                                             </div>
                                         </div>
                                     </div>
-                                ))}
+                                )) : (
+                                    <div className="col-span-full py-20 text-center text-gray-400">
+                                        Không tìm thấy cuốn sách nào trong danh mục này.
+                                    </div>
+                                )}
                             </div>
                         )}
-
                         {pagination.totalPages > 1 && (
-                            <div className="mt-20 flex justify-center items-center gap-4">
+                            <div className="mt-16 flex justify-center items-center gap-2">
                                 <button 
                                     disabled={filters.page === 1}
                                     onClick={() => handleFilterChange('page', filters.page - 1)}
-                                    className="w-12 h-12 rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-brand-primary hover:border-brand-primary transition-all font-bold disabled:opacity-30"
+                                    className="w-10 h-10 rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-brand-primary disabled:opacity-30 transition-all"
                                 >
                                     {"<"}
                                 </button>
-                                <div className="flex gap-2">
-                                    {[...Array(pagination.totalPages)].map((_, i) => (
-                                        <button
-                                            key={i + 1}
-                                            onClick={() => handleFilterChange('page', i + 1)}
-                                            className={`w-12 h-12 rounded-2xl font-bold transition-all ${
-                                                filters.page === i + 1 
-                                                ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' 
-                                                : 'bg-white border border-gray-100 text-gray-400 hover:text-brand-primary hover:border-brand-primary'
-                                            }`}
-                                        >
-                                            {i + 1}
-                                        </button>
-                                    ))}
-                                </div>
+                                {[...Array(pagination.totalPages)].map((_, i) => (
+                                    <button
+                                        key={i + 1}
+                                        onClick={() => handleFilterChange('page', i + 1)}
+                                        className={`w-10 h-10 rounded-xl font-bold transition-all ${
+                                            filters.page === i + 1 
+                                            ? 'bg-brand-primary text-white shadow-md' 
+                                            : 'bg-white border border-gray-100 text-gray-400 hover:border-brand-primary hover:text-brand-primary'
+                                        }`}
+                                    >
+                                        {i + 1}
+                                    </button>
+                                ))}
                                 <button 
                                     disabled={filters.page === pagination.totalPages}
                                     onClick={() => handleFilterChange('page', filters.page + 1)}
-                                    className="w-12 h-12 rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-brand-primary hover:border-brand-primary transition-all font-bold disabled:opacity-30"
+                                    className="w-10 h-10 rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-brand-primary disabled:opacity-30 transition-all"
                                 >
                                     {">"}
                                 </button>
@@ -327,6 +331,6 @@ const MentalityBooks = () => {
             </div>
         </div>
     );
-};
+}
 
 export default MentalityBooks;

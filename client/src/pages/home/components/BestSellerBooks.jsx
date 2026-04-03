@@ -92,10 +92,14 @@ return (
                       <div className="ln-pages"></div>
                       <div className="ln-cover">
                         <div className="ln-lighting"></div>
-                        <img 
-                          src={book.hinh_anh || 'https://via.placeholder.com/300x400'} 
-                          alt={book.ten_sach} 
-                        />
+                          <img src={book.hinh_anh ? `http://localhost:5000/uploads/products/${book.hinh_anh}` : 'https://via.placeholder.com/300x400'} alt={book.ten_sach} />
+                        {book.so_luong_ton <= 0 && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-30">
+                            <span className="bg-white/90 text-red-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg">
+                              Hết hàng
+                            </span>
+                          </div>
+                        )}
                         <div className="absolute inset-0 bg-gradient-to-tr from-black/10 to-transparent pointer-events-none"></div>
                       </div>
                     </div>
@@ -111,7 +115,9 @@ return (
                         {book.ten_sach}
                       </h3>
                       <p className="text-text-muted text-xs uppercase tracking-wide mt-1 font-body">
-                        {book.author || 'Nhiều tác giả'}
+                        {book.tac_gia && book.tac_gia.length > 0 
+                          ? book.tac_gia.map(a => a.ten_tac_gia).join(', ') 
+                          : 'Nhiều tác giả'}
                       </p>
                     </div>
 
