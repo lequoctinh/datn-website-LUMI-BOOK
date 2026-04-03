@@ -9,7 +9,7 @@ import {
 
 import bookService from '../../services/bookService';
 import categoryService from '../../services/categoryService';
-import { useCart } from '../../context/cartContext';
+import { useCart } from '../../context/CartContext';
 
 const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -84,7 +84,9 @@ const EconomyBooks = () => {
             6: '/category/children',
             7: '/category/language',
             8: '/category/biography',
-            9: '/category/mentality'
+            9: '/category/mentality',
+            10: '/category/life'
+
 
         };
 

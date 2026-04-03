@@ -8,7 +8,7 @@ import {
     faSignOutAlt,faTachometerAlt
 } from "@fortawesome/free-solid-svg-icons";
 import { useUser } from "../context/UserContext";
-import { useCart } from "../context/cartContext";
+import { useCart } from "../context/CartContext";
 import './css/Header.css';
 
 const CATEGORIES = [
@@ -18,7 +18,7 @@ const CATEGORIES = [
     { id: 4, name: "Ngoại Ngữ", icon: faGlobe, desc: "Tiếng Anh, Nhật, Trung", path:"/category/language" },
     { id: 5, name: "Tiểu Sử - Hồi Ký", icon: faFeather, desc: "Danh nhân thế giới", path:"/category/biography" },
     { id: 6, name: "Tâm Lý - Kỹ Năng", icon: faBrain, desc: "Phát triển bản thân" , path:"/category/mentality" },
-    { id: 7, name: "Cẩm Nang Đời Sống", icon: faLightbulb, desc: "Mẹo hay, Nấu ăn" },
+    { id: 7, name: "Cẩm Nang Đời Sống", icon: faLightbulb, desc: "Mẹo hay, Nấu ăn" , path:"/category/life" },
     { id: 8, name: "Thể Loại Khác", icon: faEllipsisH, desc: "Tạp chí, Lịch sử" },
 ];
 
