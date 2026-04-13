@@ -1,9 +1,22 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'uploads/products/'); 
+        let folder = 'uploads/products/';
+        
+        if (file.fieldname === 'hinh_anh_banner') {
+            folder = 'uploads/banner/';
+        } else if (file.fieldname === 'avatar') {
+            folder = 'uploads/avatar/';
+        }
+
+        if (!fs.existsSync(folder)) {
+            fs.mkdirSync(folder, { recursive: true });
+        }
+        
+        cb(null, folder);
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -11,7 +24,6 @@ const storage = multer.diskStorage({
     }
 });
 
-// Kiểm tra định dạng: Chấp nhận tất cả những gì là image/*
 const fileFilter = (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
         cb(null, true);
@@ -22,7 +34,6 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ 
     storage: storage,
-    // limits: { fileSize: 2 * 1024 * 1024 },
     fileFilter: fileFilter
 });
 

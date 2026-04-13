@@ -2,53 +2,54 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  faTrashCan, 
-  faPlus, 
-  faMinus, 
-  faArrowLeft, 
-  faShoppingCart
+faTrashCan, 
+faPlus, 
+faMinus, 
+faArrowLeft, 
+faShoppingCart
 } from '@fortawesome/free-solid-svg-icons';
 import { useCart } from '../../context/cartContext';
 
 const Cart = () => {
-  const navigate = useNavigate();
+const navigate = useNavigate();
     const { cartItems, updateQuantity, removeItem } = useCart();
 
     const subtotal = cartItems.reduce((acc, item) => acc + (item.gia_ban * item.so_luong), 0);
     const shipping = 0;
 
     const handleUpdateQuantity = async (id, currentQty, delta, stock) => {
-      const newQty = currentQty + delta;
-      if (newQty < 1) return;
-      if (newQty > stock) return; 
-      await updateQuantity(id, newQty);
-  };
+    const newQty = currentQty + delta;
+    if (newQty < 1) return;
+    if (newQty > stock) return; 
+    await updateQuantity(id, newQty);
+};
 
     return (
-      <div className="min-h-screen bg-gray-50 font-body py-12 px-4 sm:px-6 lg:px-8 text-gray-900">
-          <div className="max-w-6xl mx-auto">
-              <div className="flex items-center gap-4 mb-8 border-b border-gray-200 pb-6">
-                  <div className="w-12 h-12 bg-brand-primary/10 rounded-2xl flex items-center justify-center text-brand-primary">
-                      <FontAwesomeIcon icon={faShoppingCart} className="text-xl" />
-                  </div>
-                  <h1 className="font-heading text-4xl font-black tracking-tight">
-                      Giỏ hàng <span className="text-brand-primary">({cartItems.length})</span>
-                  </h1>
-              </div>
+    <div className="min-h-screen bg-gray-50 font-body py-12 px-4 sm:px-6 lg:px-8 text-gray-900">
+        <div className="max-w-6xl mx-auto">
+            <div className="flex items-center gap-4 mb-8 border-b border-gray-200 pb-6">
+                <div className="w-12 h-12 bg-brand-primary/10 rounded-2xl flex items-center justify-center text-brand-primary">
+                    <FontAwesomeIcon icon={faShoppingCart} className="text-xl" />
+                </div>
+                <h1 className="font-heading text-4xl font-black tracking-tight">
+                    Giỏ hàng <span className="text-brand-primary">({cartItems.length})</span>
+                </h1>
+            </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                  <div className="lg:col-span-2 space-y-6">
-                      {cartItems.length > 0 ? (
-                          cartItems.map((item) => (
-                              <div key={item.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row items-center gap-6 transition-all hover:shadow-md">
-                                  <div className="w-28 h-36 flex-shrink-0 bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
-                                      <img 
-                                          src={item.hinh_anh} 
-                                          alt={item.ten_sach} 
-                                          className="w-full h-full object-contain p-2 mix-blend-multiply" 
-                                      />
-                                  </div>
-                                  <div className="flex-1 text-center sm:text-left">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                <div className="lg:col-span-2 space-y-6">
+                    {cartItems.length > 0 ? (
+                        cartItems.map((item) => (
+                            <div key={item.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row items-center gap-6 transition-all hover:shadow-md">
+                                <div className="group relative w-28 h-40 flex-shrink-0 bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
+                                    <img 
+                                        src={item.hinh_anh ? `http://localhost:5000/uploads/products/${item.hinh_anh}` : 'https://via.placeholder.com/300x400'} 
+                                        alt={item.ten_sach} 
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                                    />
+                                    <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
+                                <div className="flex-1 text-center sm:text-left">
                                         <h3 className="font-heading text-xl font-bold mb-1 line-clamp-2">{item.ten_sach}</h3>
                                         <p className="text-gray-500 text-sm mb-3">Đơn giá: <span className="font-bold text-gray-800">{Number(item.gia_ban).toLocaleString('vi-VN')} đ</span></p>
                                         <button 
@@ -82,7 +83,7 @@ const Cart = () => {
                                 </div>
                             ))
                         ) : (
-                          <div className="text-center py-24 bg-white rounded-3xl shadow-sm border border-dashed border-gray-300">
+                        <div className="text-center py-24 bg-white rounded-3xl shadow-sm border border-dashed border-gray-300">
                                 <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-300">
                                     <FontAwesomeIcon icon={faShoppingCart} size="2x" />
                                 </div>

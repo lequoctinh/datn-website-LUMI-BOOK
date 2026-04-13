@@ -271,63 +271,65 @@ exports.getNewArrivals = async (req, res) => {
 exports.getAllBooks = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 12; 
+        const limit = parseInt(req.query.limit) || 12;
         const offset = (page - 1) * limit;
         
         const search = req.query.search || '';
-        const categoryId = req.query.category_id || null;
-        const priceRange = req.query.price_range || null; 
+        const categoryId = req.query.category_id || 'all';
+        const priceRange = req.query.price_range || '';
         const sortBy = req.query.sort_by || 'newest';
 
-        let query = `
-            SELECT DISTINCT s.id, s.ten_sach, s.gia_ban, s.gia_giam, s.hinh_anh,
-            (SELECT tg.ten_tac_gia FROM sach_tac_gia stg JOIN tac_gia tg ON stg.tac_gia_id = tg.id WHERE stg.sach_id = s.id LIMIT 1) AS author
-            FROM sach s
-            LEFT JOIN sach_danh_muc sdm ON s.id = sdm.sach_id
-            WHERE s.trang_thai = 'hien_thi'
-        `;
-        
-        let countQuery = `SELECT COUNT(DISTINCT s.id) as total FROM sach s LEFT JOIN sach_danh_muc sdm ON s.id = sdm.sach_id WHERE s.trang_thai = 'hien_thi'`;
+        let whereClauses = ["s.trang_thai = 'hien_thi'"];
         let queryParams = [];
 
         if (search) {
-            const searchPart = ` AND s.ten_sach LIKE ?`;
-            query += searchPart;
-            countQuery += searchPart;
+            whereClauses.push("s.ten_sach LIKE ?");
             queryParams.push(`%${search}%`);
         }
 
         if (categoryId && categoryId !== 'all') {
-            const catPart = ` AND sdm.danh_muc_id = ?`;
-            query += catPart;
-            countQuery += catPart;
+            whereClauses.push("sdm.danh_muc_id = ?");
             queryParams.push(categoryId);
         }
 
         if (priceRange) {
-            let pricePart = '';
-            if (priceRange === 'under-100') pricePart = ` AND (CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) < 100000`;
-            else if (priceRange === '100-300') pricePart = ` AND (CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) BETWEEN 100000 AND 300000`;
-            else if (priceRange === 'above-300') pricePart = ` AND (CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) > 300000`;
-            
-            query += pricePart;
-            countQuery += pricePart;
+            if (priceRange === 'under-100') {
+                whereClauses.push("(CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) < 100000");
+            } else if (priceRange === '100-300') {
+                whereClauses.push("(CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) BETWEEN 100000 AND 300000");
+            } else if (priceRange === 'above-300') {
+                whereClauses.push("(CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) > 300000");
+            }
         }
 
+        const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : "";
+
+        const countQuery = `
+            SELECT COUNT(DISTINCT s.id) as total 
+            FROM sach s 
+            LEFT JOIN sach_danh_muc sdm ON s.id = sdm.sach_id 
+            ${whereSql}
+        `;
+        let orderSql = "";
         switch (sortBy) {
-            case 'price-asc': query += ` ORDER BY (CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) ASC`; break;
-            case 'price-desc': query += ` ORDER BY (CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) DESC`; break;
-            case 'best-seller': query += ` ORDER BY (SELECT SUM(so_luong) FROM don_hang_chi_tiet WHERE sach_id = s.id) DESC`; break;
-            default: query += ` ORDER BY s.created_at DESC`;
+            case 'price-asc': orderSql = "ORDER BY (CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) ASC"; break;
+            case 'price-desc': orderSql = "ORDER BY (CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) DESC"; break;
+            case 'best-seller': orderSql = "ORDER BY (SELECT IFNULL(SUM(so_luong),0) FROM don_hang_chi_tiet WHERE sach_id = s.id) DESC"; break;
+            default: orderSql = "ORDER BY s.created_at DESC";
         }
 
-        query += ` LIMIT ? OFFSET ?`;
-        const finalParams = [...queryParams, limit, offset];
-
-        const [rows] = await pool.query(query, finalParams);
+        const dataQuery = `
+            SELECT DISTINCT s.id, s.ten_sach, s.gia_ban, s.gia_giam, s.hinh_anh,
+            (SELECT tg.ten_tac_gia FROM sach_tac_gia stg JOIN tac_gia tg ON stg.tac_gia_id = tg.id WHERE stg.sach_id = s.id LIMIT 1) AS author
+            FROM sach s
+            LEFT JOIN sach_danh_muc sdm ON s.id = sdm.sach_id
+            ${whereSql}
+            ${orderSql}
+            LIMIT ? OFFSET ?
+        `;
         const [countResult] = await pool.query(countQuery, queryParams);
-        
         const total = countResult[0].total;
+        const [rows] = await pool.query(dataQuery, [...queryParams, Number(limit), Number(offset)]);
 
         res.json({
             success: true,
@@ -340,7 +342,7 @@ exports.getAllBooks = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Lỗi server khi lấy danh sách sản phẩm' });
+        console.error("Lỗi SQL chi tiết:", error);
+        res.status(500).json({ success: false, message: 'Lỗi server' });
     }
 };
