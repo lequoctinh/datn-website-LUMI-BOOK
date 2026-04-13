@@ -38,6 +38,8 @@ app.use('/api/publishers', publisherRoutes);
 app.use('/api/checkout',checkoutRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/vouchers', voucherRoutes);
+app.use('/api/vouchers', voucherRoutes);
+
 // Root route
 app.get('/', (req, res) => {
     res.send('API Lumi Book is running...');

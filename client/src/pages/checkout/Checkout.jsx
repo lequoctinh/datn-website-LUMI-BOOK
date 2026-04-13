@@ -117,10 +117,10 @@ const Checkout = () => {
   const handleApplyVoucher = async () => {
     if (!voucherCode.trim()) return setVoucherError("Vui lòng nhập mã");
     try {
-      const response = await axiosClient.post('/admin/vouchers/check', {
-        ma_code: voucherCode,
-        tong_tien_don_hang: subtotal
-      });
+     const response = await axiosClient.post('/vouchers/check', {
+            ma_code: voucherCode.trim(),
+            tong_tien_don_hang: subtotal
+        });
       if (response.success) {
         setAppliedVoucher(response.data);
         setVoucherError('');
@@ -259,7 +259,7 @@ const Checkout = () => {
               <div className="mt-6 space-y-3">
                 <div className="flex gap-2">
                   <input type="text" placeholder="Mã giảm giá" value={voucherCode} onChange={(e) => setVoucherCode(e.target.value.toUpperCase())} className={`flex-1 px-3 py-2 border rounded-lg outline-none uppercase text-sm ${voucherError ? 'border-red-500' : 'focus:border-brand-primary'}`} />
-                  <button onClick={handleApplyVoucher} className="bg-brand-primary text-white px-4 py-2 rounded-lg text-sm font-bold">Áp dụng</button>
+                  <button onClick={handleApplyVoucher} className="bg-brand-primary text-white px-2 py-4 rounded-lg text-sm font-bold">Áp dụng</button>
                 </div>
                 {voucherError && <p className="text-red-500 text-[11px] italic">{voucherError}</p>}
                 {appliedVoucher && (
