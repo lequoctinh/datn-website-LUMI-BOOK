@@ -36,8 +36,14 @@ const authService = {
     addAddress(data) {
         return axiosClient.post('/auth/addresses', data);
     },
+    updateAddress(id, data) {
+        return axiosClient.put(`/auth/addresses/${id}`, data);
+    },
     deleteAddress(id) {
         return axiosClient.delete(`/auth/addresses/${id}`);
+    },
+    setDefaultAddress(id) {
+        return axiosClient.patch(`/auth/addresses/${id}/default`);
     }
 };
 

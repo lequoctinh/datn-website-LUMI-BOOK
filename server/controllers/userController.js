@@ -54,3 +54,47 @@ exports.deleteAddress = async (req, res) => {
         res.status(500).json({ message: 'Lỗi xóa địa chỉ' });
     }
 };
+
+exports.updateAddress = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { ho_ten_nhan, sdt_nhan, tinh_thanh, quan_huyen, phuong_xa, dia_chi_chi_tiet, is_default } = req.body;
+        const userId = req.user.id;
+
+        if (is_default) {
+            await pool.execute('UPDATE dia_chi SET is_default = 0 WHERE nguoi_dung_id = ?', [userId]);
+        }
+
+        const query = `
+            UPDATE dia_chi 
+            SET ho_ten_nhan = ?, sdt_nhan = ?, tinh_thanh = ?, quan_huyen = ?, phuong_xa = ?, dia_chi_chi_tiet = ?, is_default = ?
+            WHERE id = ? AND nguoi_dung_id = ?
+        `;
+        
+        const [result] = await pool.execute(query, [
+            ho_ten_nhan, sdt_nhan, tinh_thanh, quan_huyen, phuong_xa, 
+            dia_chi_chi_tiet, is_default ? 1 : 0, id, userId
+        ]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy địa chỉ hoặc bạn không có quyền" });
+        }
+
+        res.json({ success: true, message: "Cập nhật địa chỉ thành công" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Lỗi cập nhật địa chỉ" });
+    }
+};
+
+exports.setDefaultAddress = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+        await pool.execute('UPDATE dia_chi SET is_default = 0 WHERE nguoi_dung_id = ?', [userId]);
+        await pool.execute('UPDATE dia_chi SET is_default = 1 WHERE id = ? AND nguoi_dung_id = ?', [id, userId]);
+        res.json({ success: true, message: "Đã thiết lập địa chỉ mặc định" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi thiết lập mặc định" });
+    }
+};

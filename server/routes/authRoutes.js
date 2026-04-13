@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { register, login, googleLogin, getMe,updateProfile, changePassword, verifyEmail } = require('../controllers/authController');
 const { getAllUsers, updateUserStatus, deleteUser } = require('../controllers/authController');
-const { upload, uploadAvatar, getAddresses, addAddress, deleteAddress } = require('../controllers/userController');
+const { upload, uploadAvatar, getAddresses, addAddress, deleteAddress, updateAddress, setDefaultAddress } = require('../controllers/userController');
 const { protect, admin } = require('../middlewares/auth');
 
 router.post('/register', register);
@@ -19,6 +19,8 @@ router.post('/upload-avatar', protect, upload.single('avatar'), uploadAvatar);
 router.get('/addresses', protect, getAddresses);
 router.post('/addresses', protect, addAddress);
 router.delete('/addresses/:id', protect, deleteAddress);
+router.put('/addresses/:id', protect, updateAddress);
+router.patch('/addresses/:id/default', protect, setDefaultAddress);
 
 
 router.get('/admin/users', protect, admin, getAllUsers);
