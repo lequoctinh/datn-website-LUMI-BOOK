@@ -21,6 +21,7 @@ router.delete('/:id', protect, admin, voucherController.deleteVoucher);
 // PUT /api/admin/vouchers/status/:id
 router.put('/status/:id', protect, admin, voucherController.updateStatus);
 
+
 // Route cho khách hàng sử dụng ở trang Checkout (không cần quyền admin)
 router.post('/check', protect, voucherController.checkVoucher);
 
