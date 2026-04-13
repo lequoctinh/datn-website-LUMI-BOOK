@@ -2,70 +2,61 @@ import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight, faPlay, faAward, faBolt } from "@fortawesome/free-solid-svg-icons";
 import './css/HeroSection.css';
-
-const HERO_DATA = [
-    {
-        id: 1,
-        title: "Tâm Lý Học Về Tiền",
-        category: "TÀI CHÍNH CÁ NHÂN",
-        desc: "Một góc nhìn hoàn toàn mới về sự giàu có. Không phải là những con số vô tri, mà là cách bạn kiểm soát cái tôi và nỗi sợ hãi.",
-        price: "159.000đ",
-        image: "/Hero_Section/Hero_Section1.png", 
-        theme: "from-emerald-50 to-teal-100",
-        accent: "text-emerald-800",
-        btn: "bg-emerald-800",
-        shadow: "shadow-emerald-900/20"
-    },
-    {
-        id: 2,
-        title: "Nhà Giả Kim",
-        category: "VĂN HỌC KINH ĐIỂN",
-        desc: "Khi bạn khao khát một điều gì đó, cả vũ trụ sẽ hợp lực giúp bạn đạt được. Cuốn sách gối đầu giường của hàng triệu người trẻ.",
-        price: "89.000đ",
-        image: "/Hero_Section/Hero_Section2.png",
-        theme: "from-orange-50 to-amber-100",
-        accent: "text-orange-700",
-        btn: "bg-orange-700",
-        shadow: "shadow-orange-900/20"
-    },
-    {
-        id: 3,
-        title: "Rừng Na Uy",
-        category: "TIỂU THUYẾT LÃNG MẠN",
-        desc: "Một bản nhạc buồn của tuổi trẻ, tình yêu và sự mất mát. Kiệt tác đưa tên tuổi Murakami vươn tầm thế giới.",
-        price: "115.000đ",
-        image: "/Hero_Section/Hero_Section3.png",
-        theme: "from-slate-50 to-gray-200",
-        accent: "text-slate-800",
-        btn: "bg-slate-800",
-        shadow: "shadow-slate-900/20"
-    }
-];
-
+import bannerServiceClient from "../../../services/bannerServiceClient";
 function HeroSection() {
+    const [banners, setBanners] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
-
+    const [loading, setLoading] = useState(true);
     useEffect(() => {
-        const timer = setInterval(() => {
-            handleNext();
-        }, 6000);
-        return () => clearInterval(timer);
-    }, [currentIndex]);
+        const fetchBanners = async () => {
+            try {
+                const res = await bannerServiceClient.getAll();
+                if (res.success && res.data.length > 0) {
+                    const mappedData = res.data.map((item, index) => ({
+                        id: item.id,
+                        title: item.tieu_de,
+                        category: item.danh_muc || "SÁCH MỚI",
+                        desc: item.noi_dung,
+                        price: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.gia_giam > 0 ? item.gia_giam : item.gia_ban),
+                        image: `http://localhost:5000/uploads/banner/${item.hinh_anh}`,
+                        theme: index % 3 === 0 ? "from-emerald-50 to-teal-100" : index % 3 === 1 ? "from-orange-50 to-amber-100" : "from-slate-50 to-gray-200",
+                        accent: index % 3 === 0 ? "text-emerald-800" : index % 3 === 1 ? "text-orange-700" : "text-slate-800",
+                        btn: index % 3 === 0 ? "bg-emerald-800" : index % 3 === 1 ? "bg-orange-700" : "bg-slate-800",
+                        shadow: index % 3 === 0 ? "shadow-emerald-900/20" : index % 3 === 1 ? "shadow-orange-900/20" : "shadow-slate-900/20"
+                    }));
+                    setBanners(mappedData);
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải banner:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchBanners();
+    }, []);
+    useEffect(() => {
+        if (banners.length > 0) {
+            const timer = setInterval(() => {
+                handleNext();
+            }, 6000);
+            return () => clearInterval(timer);
+        }
+    }, [currentIndex, banners]);
 
     const handleNext = () => {
+        if (banners.length === 0) return;
         setIsAnimating(true);
         setTimeout(() => {
-            setCurrentIndex((prev) => (prev + 1) % HERO_DATA.length);
+            setCurrentIndex((prev) => (prev + 1) % banners.length);
             setIsAnimating(false);
-        }, 500); 
+        }, 500);
     };
+    if (loading || banners.length === 0) return null;
 
-    const data = HERO_DATA[currentIndex];
-
-    return (
+    const data = banners[currentIndex];
+return (
         <section className={`lumi-hero-wrapper bg-gradient-to-br ${data.theme} transition-colors duration-1000`}>
-            
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 {[...Array(8)].map((_, i) => (
                     <div 
@@ -86,9 +77,7 @@ function HeroSection() {
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[600px] md:h-[600px] bg-white/40 rounded-full blur-[80px] md:blur-[120px] mix-blend-overlay pointer-events-none"></div>
 
             <div className="container mx-auto px-4 py-12 md:py-0 h-full relative z-10 flex flex-col md:flex-row items-center justify-between gap-10 md:gap-0">
-                
                 <div className={`w-full md:w-1/2 flex flex-col items-start space-y-6 md:space-y-8 pl-0 md:pl-10 transition-all duration-500 z-20 ${isAnimating ? 'opacity-0 translate-y-10' : 'opacity-100 translate-y-0'}`}>
-                    
                     <div className="lumi-glass-box px-4 py-1.5 md:px-6 md:py-2 rounded-full flex items-center gap-3 lumi-anim-slide-up" style={{animationDelay: '0.1s'}}>
                         <FontAwesomeIcon icon={faBolt} className={`${data.accent}`} />
                         <span className={`text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase ${data.accent}`}>
@@ -109,7 +98,7 @@ function HeroSection() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-4 pt-2 md:pt-4 lumi-anim-slide-up" style={{animationDelay: '0.4s'}}>
-                        <button className={`group relative px-6 py-3 md:px-8 md:py-4 rounded-xl md:rounded-2xl text-white font-bold overflow-hidden transition-all hover:scale-105 ${data.btn} ${data.shadow} shadow-xl flex-1 md:flex-none`}>
+<button className={`group relative px-6 py-3 md:px-8 md:py-4 rounded-xl md:rounded-2xl text-white font-bold overflow-hidden transition-all hover:scale-105 ${data.btn} ${data.shadow} shadow-xl flex-1 md:flex-none`}>
                             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                             <span className="relative flex items-center justify-center gap-2 md:gap-3 text-sm md:text-base">
                                 MUA NGAY {data.price}
@@ -124,8 +113,7 @@ function HeroSection() {
                             Đọc Thử
                         </button>
                     </div>
-
-                    <div className="hidden md:flex items-center gap-6 pt-6 opacity-80 lumi-anim-slide-up" style={{animationDelay: '0.5s'}}>
+<div className="hidden md:flex items-center gap-6 pt-6 opacity-80 lumi-anim-slide-up" style={{animationDelay: '0.5s'}}>
                         <div className="flex -space-x-3">
                             <img src="https://i.pravatar.cc/100?img=1" className="w-10 h-10 rounded-full border-2 border-white" alt="User" />
                             <img src="https://i.pravatar.cc/100?img=5" className="w-10 h-10 rounded-full border-2 border-white" alt="User" />
@@ -142,21 +130,17 @@ function HeroSection() {
                 </div>
 
                 <div className={`w-full md:w-1/2 min-h-[400px] md:h-full relative lumi-3d-stage transition-all duration-700 pb-20 md:pb-0 ${isAnimating ? 'opacity-0 scale-90 translate-x-10' : 'opacity-100 scale-100 translate-x-0'}`}>
-                    
                     <div className="absolute w-[300px] h-[300px] md:w-[600px] md:h-[600px] border border-white/40 rounded-full lumi-spin-slow opacity-30"></div>
                     <div className="absolute w-[250px] h-[250px] md:w-[500px] md:h-[500px] border border-dashed border-gray-900/10 rounded-full lumi-spin-reverse opacity-40"></div>
                     <div className={`absolute w-[150px] h-[150px] md:w-[200px] md:h-[200px] bg-white rounded-full blur-[60px] md:blur-[80px] mix-blend-soft-light lumi-glow-effect`}></div>
-
-                    <div className="lumi-book-container lumi-anim-float group">
+<div className="lumi-book-container lumi-anim-float group">
                         <div className="lumi-book-spine"></div>
-                        
                         <img 
                             src={data.image} 
                             alt={data.title}
                             className="lumi-book-cover relative w-auto h-auto md:w-[350px]"
                             onError={(e) => {
-                                e.target.style.display = 'none'; 
-                                console.error("Lỗi load ảnh:", data.image);
+                                e.target.src = "https://via.placeholder.com/350x500?text=No+Image";
                             }}
                         />
                     </div>
@@ -167,18 +151,19 @@ function HeroSection() {
                 <div 
                     key={currentIndex} 
                     className={`h-full ${data.btn} lumi-progress-bar`}
+                    style={{ animationDuration: '6s' }}
                 ></div>
             </div>
 
             <div className="absolute bottom-10 right-10 hidden md:flex flex-col gap-4 z-50">
-                {HERO_DATA.map((_, idx) => (
+                {banners.map((_, idx) => (
                     <button 
                         key={idx}
                         onClick={() => { if(!isAnimating) { setIsAnimating(true); setTimeout(() => { setCurrentIndex(idx); setIsAnimating(false); }, 500); } }}
                         className={`w-3 h-3 rounded-full transition-all duration-300 ${idx === currentIndex ? 'bg-gray-900 scale-150 ring-4 ring-gray-900/20' : 'bg-gray-400 hover:bg-gray-600'}`}
                     />
                 ))}
-            </div>
+            </div>  
         </section>
     );
 }
