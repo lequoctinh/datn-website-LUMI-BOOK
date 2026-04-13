@@ -72,7 +72,11 @@ const ProductList = () => {
     }, [filters]);
 
     const handleFilterChange = (key, value) => {
-        setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
+        setFilters(prev => ({ 
+            ...prev, 
+            [key]: value, 
+            page: key === 'page' ? value : 1 
+        }));
     };
 
     const handleAddToCart = (e, book) => {

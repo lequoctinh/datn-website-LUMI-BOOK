@@ -238,7 +238,11 @@ useEffect(() => {
                 {cartItems.map((item) => (
                   <div key={item.id} className="flex items-center gap-3 mb-4">
                     <div className="relative">
-                      <img src={item.hinh_anh} className="w-12 h-16 object-cover rounded shadow-sm" alt={item.ten_sach} />
+                      <img 
+                        src={item.hinh_anh ? `http://localhost:5000/uploads/products/${item.hinh_anh}` : 'https://via.placeholder.com/300x400'} 
+                        className="w-12 h-16 object-cover rounded shadow-sm" 
+                        alt={item.ten_sach} 
+                      />
                       <span className="absolute -top-2 -right-2 bg-text-secondary text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-surface">
                         {item.so_luong}
                       </span>
@@ -283,7 +287,7 @@ useEffect(() => {
                       />
                       <button 
                           onClick={handleApplyVoucher}
-                          className="bg-brand-primary text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-opacity-90 transition-all"
+                          className="bg-brand-primary text-white px-3 py-4 rounded-lg text-sm font-bold hover:bg-opacity-90 transition-all"
                       >
                           Áp dụng
                       </button>
