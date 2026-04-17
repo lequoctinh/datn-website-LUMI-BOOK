@@ -80,38 +80,6 @@ exports.getReviewsByBook = async (req, res) => {
         res.status(500).json({ success: false, message: 'Lỗi server' });
     }
 };
-exports.getReviewsByBook = async (req, res) => {
-    try {
-        const { sach_id } = req.params;
-
-        const [rows] = await pool.execute(
-            `SELECT dg.*, nd.ho_ten, nd.email 
-            FROM danh_gia dg 
-            JOIN nguoi_dung nd ON dg.nguoi_dung_id = nd.id 
-            WHERE dg.sach_id = ? AND dg.trang_thai = 'hien_thi' 
-            ORDER BY dg.ngay_danh_gia DESC`,
-            [sach_id]
-        );
-
-        const [stats] = await pool.execute(
-            `SELECT COUNT(*) as total, AVG(so_sao) as average 
-            FROM danh_gia 
-            WHERE sach_id = ? AND trang_thai = 'hien_thi'`,
-            [sach_id]
-        );
-
-        res.json({
-            success: true,
-            data: rows,
-            stats: {
-                total: stats[0].total,
-                average: parseFloat(stats[0].average || 0).toFixed(1)
-            }
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Lỗi server' });
-    }
-};
 
 exports.getAllReviewsAdmin = async (req, res) => {
     try {

@@ -7,9 +7,9 @@ import {
   faCheckDouble, faTimesCircle, faClock, faReceipt, faStar, faPenNib
 } from '@fortawesome/free-solid-svg-icons';
 import axiosClient from '../../utils/axiosClient';
+import reviewService from '../../services/reviewService';
 import { useCart } from '../../context/cartContext';
 import { toast } from 'react-toastify';
-import reviewService from '../../services/reviewService';
 
 const OrderDetail = () => {
   const { id } = useParams();
@@ -21,6 +21,7 @@ const OrderDetail = () => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  
   const IMAGE_BASE_URL = 'http://localhost:5000/uploads/products/';
 
   useEffect(() => {
@@ -50,7 +51,8 @@ const OrderDetail = () => {
       toast.error("Lỗi khi mua lại");
     }
   };
-const handleSubmitReview = async (sachId) => {
+
+  const handleSubmitReview = async (sachId) => {
     if (!comment.trim()) {
       toast.warning("Vui lòng nhập nội dung bình luận");
       return;
@@ -77,6 +79,7 @@ const handleSubmitReview = async (sachId) => {
       setSubmitting(false);
     }
   };
+
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#FBFBFD]">
       <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
@@ -195,6 +198,7 @@ const handleSubmitReview = async (sachId) => {
                         </div>
                         <p className="font-black text-text-primary shrink-0">{(item.so_luong * item.gia_luc_mua).toLocaleString()} đ</p>
                       </div>
+
                       {showReviewForm === item.sach_id && !item.da_danh_gia && (
                         <div className="bg-white border-2 border-brand-primary/20 rounded-2xl p-5 mt-2 shadow-inner animate-fadeIn">
                           <p className="text-xs font-black uppercase text-text-secondary mb-3">Đánh giá sản phẩm này</p>
@@ -226,6 +230,7 @@ const handleSubmitReview = async (sachId) => {
                     </div>
                   ))}
                 </div>
+
                 <div className="mt-10 pt-10 border-t border-dashed border-border-default space-y-4">
                   <div className="flex justify-between text-text-secondary font-medium">
                     <span>Tạm tính món hàng</span>

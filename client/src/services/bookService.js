@@ -1,0 +1,54 @@
+import axios from 'axios';
+
+const API_URL = 'http://localhost:5000/api/books';
+
+const getAuthHeaders = () => {
+    const token = localStorage.getItem('lumi_token');
+    return { 
+        headers: { 
+            Authorization: `Bearer ${token}`,
+        } 
+    };
+};
+const bookService = {
+    getBooksAdmin: async (page = 1, limit = 10, search = '') => {
+        const response = await axios.get(`${API_URL}/admin?page=${page}&limit=${limit}&search=${search}`, getAuthHeaders());
+        return response.data;
+    },
+
+    getBookById: async (id) => {
+        const response = await axios.get(`${API_URL}/admin/${id}`, getAuthHeaders());
+        return response.data;
+    },
+    createBook: async (formData) => {
+        const response = await axios.post(`${API_URL}/admin`, formData, getAuthHeaders());
+        return response.data;
+    },
+    updateBook: async (id, formData) => {
+        const response = await axios.put(`${API_URL}/admin/${id}`, formData, getAuthHeaders());
+        return response.data;
+    },
+    toggleStatus: async (id, trang_thai) => {
+        const response = await axios.patch(`${API_URL}/admin/${id}/status`, { trang_thai }, getAuthHeaders());
+        return response.data;
+    },
+    getAllBooks: async (params) => {
+    const queryString = new URLSearchParams(params).toString();
+    const res = await axios.get(`${API_URL}?${queryString}`); 
+    return res.data;
+    },
+    getBestSellers: async () => {
+        const response = await axios.get(`${API_URL}/best-sellers`);
+        return response.data;
+    },
+    getNewArrivals: async () => {
+        const response = await axios.get(`${API_URL}/new-arrivals`);
+        return response.data;
+    },
+    getPublicBookById: async (id) => { 
+        const response = await axios.get(`${API_URL}/${id}`);
+        return response.data;
+    },
+};
+
+export default bookService;

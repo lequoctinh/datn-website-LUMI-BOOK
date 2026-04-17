@@ -1,0 +1,53 @@
+:root {
+    --color-background: #F6F1E9;
+    --color-brand-primary: #8B5E3C;
+    --color-text-primary: #1F2937;
+    --color-accent-primary: #C2410C;
+}
+
+.mobile-header-wrapper {
+    background-color: var(--color-background);
+    transition: all 0.3s ease;
+}
+
+.logo-text {
+    font-family: 'Merriweather', serif;
+}
+
+.animate-slide-down {
+    animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top center;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-in {
+    animation: slideInLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+}   
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

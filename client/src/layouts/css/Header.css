@@ -1,0 +1,119 @@
+:root {
+    --color-background: #F6F1E9;
+    --color-brand-primary: #8B5E3C;
+    --color-brand-dark: #6F4A2E;
+    --color-text-primary: #1F2937;
+    --color-surface: #FFFFFF;
+    --color-accent: #C2410C;
+    --color-border: rgba(0,0,0,0.08);
+}
+
+.header-wrapper {
+    background-color: var(--color-background);
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.logo-text {
+    font-family: 'Merriweather', serif;
+    color: var(--color-brand-primary);
+    font-weight: 800;
+}
+
+.search-input {
+    background-color: var(--color-surface);
+    border: 1px solid rgba(0,0,0,0.15);
+    color: var(--color-text-primary);
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--color-brand-primary);
+    box-shadow: 0 0 0 2px rgba(139, 94, 60, 0.2);
+}
+
+.nav-item {
+    color: var(--color-text-primary);
+    font-weight: 500;
+    transition: color 0.2s;
+    position: relative;
+}
+
+.nav-item:hover {
+    color: var(--color-brand-primary);
+}
+
+.nav-item::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -4px;
+    left: 0;
+    background-color: var(--color-brand-primary);
+    transition: width 0.3s;
+}
+
+.nav-item:hover::after {
+    width: 100%;
+}
+
+.btn-search {
+    background-color: var(--color-brand-primary);
+    color: white;
+}
+
+.btn-search:hover {
+    background-color: var(--color-brand-dark);
+}
+
+.cart-badge {
+    background-color: var(--color-accent);
+    color: white;
+    font-size: 0.7rem;
+    border: 2px solid var(--color-background);
+}
+
+.animate-fade-in-down {
+    animation: fadeInDown 0.2s ease-out forwards;
+    transform-origin: top center;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.animate-bounce-short {
+    animation: bounceShort 2s infinite;
+}
+
+@keyframes bounceShort {
+    0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+    40% {transform: translateY(-3px);}
+    60% {transform: translateY(-1.5px);}
+}
+
+.mega-menu-content::-webkit-scrollbar {
+    width: 6px;
+}
+.mega-menu-content::-webkit-scrollbar-thumb {
+    background-color: var(--color-brand-light);
+    border-radius: 4px;
+}
+
+.user-dropdown {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0,0,0,0.05);
+    z-index: 1001;
+}
