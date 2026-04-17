@@ -9,11 +9,12 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
 import bookService from '../../services/bookService';
+import reviewService from '../../services/reviewService';
 import { useCart } from '../../context/cartContext';
 
 const IMAGE_BASE_URL = 'http://localhost:5000/uploads/products/';
-
-const ProductDetail = () => {
+    
+function ProductDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [isAdding, setIsAdding] = useState(false);
@@ -24,6 +25,8 @@ const ProductDetail = () => {
     const [quantity, setQuantity] = useState(1);
     const [activeImage, setActiveImage] = useState('');
     const [allImages, setAllImages] = useState([]);
+    const [reviews, setReviews] = useState([]);
+    const [reviewStats, setReviewStats] = useState({ total: 0, average: 0 });
 
     useEffect(() => {
         const fetchBookDetail = async () => {
@@ -47,6 +50,12 @@ const ProductDetail = () => {
                     
                     setAllImages(images);
                     setActiveImage(images[0] || 'https://via.placeholder.com/400x600?text=No+Image');
+
+                    const reviewRes = await reviewService.getReviewsByBook(id);
+                    if (reviewRes.success) {
+                        setReviews(reviewRes.data);
+                        setReviewStats(reviewRes.stats || { total: reviewRes.data.length, average: 0 });
+                    }
 
                     const relatedRes = await bookService.getBestSellers();
                     if (relatedRes.success) {
@@ -174,12 +183,16 @@ const ProductDetail = () => {
                                     <span className="font-bold text-gray-800">{book.nha_cung_cap || 'Đang cập nhật'}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-yellow-400">
-                                    <FontAwesomeIcon icon={faStar} />
-                                    <FontAwesomeIcon icon={faStar} />
-                                    <FontAwesomeIcon icon={faStar} />
-                                    <FontAwesomeIcon icon={faStar} />
-                                    <FontAwesomeIcon icon={faStar} className="text-gray-300" />
-                                    <span className="text-gray-500 font-medium ml-1">(Chưa có đánh giá)</span>
+                                    {[...Array(5)].map((_, i) => (
+                                        <FontAwesomeIcon 
+                                            key={i} 
+                                            icon={faStar} 
+                                            className={i < Math.round(reviewStats.average || 0) ? "text-yellow-400" : (reviewStats.total > 0 ? "text-gray-300" : "text-gray-300")} 
+                                        />
+                                    ))}
+                                    <span className="text-gray-500 font-medium ml-1">
+                                        {reviewStats.total > 0 ? `(${reviewStats.average}/5 dựa trên ${reviewStats.total} đánh giá)` : '(Chưa có đánh giá)'}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -253,16 +266,55 @@ const ProductDetail = () => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10">
-                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-                            <div className="w-1.5 h-6 bg-brand-primary rounded-full"></div>
-                            <h2 className="text-xl font-black text-gray-800 uppercase tracking-wide">Giới thiệu sách</h2>
-                        </div>
-                        <div className="prose prose-gray max-w-none">
-                            {book.mo_ta && <p className="text-gray-600 font-medium italic mb-6 leading-relaxed">{book.mo_ta}</p>}
-                            <div className="text-gray-700 leading-loose text-justify whitespace-pre-line">
-                                {book.noi_dung || 'Nội dung chi tiết đang được cập nhật...'}
+                    <div className="lg:col-span-2 space-y-8">
+                        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10">
+                            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+                                <div className="w-1.5 h-6 bg-brand-primary rounded-full"></div>
+                                <h2 className="text-xl font-black text-gray-800 uppercase tracking-wide">Giới thiệu sách</h2>
                             </div>
+                            <div className="prose prose-gray max-w-none">
+                                {book.mo_ta && <p className="text-gray-600 font-medium italic mb-6 leading-relaxed">{book.mo_ta}</p>}
+                                <div className="text-gray-700 leading-loose text-justify whitespace-pre-line">
+                                    {book.noi_dung || 'Nội dung chi tiết đang được cập nhật...'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10">
+                            <div className="flex items-center gap-3 mb-8 pb-4 border-b border-gray-100">
+                                <div className="w-1.5 h-6 bg-yellow-400 rounded-full"></div>
+                                <h2 className="text-xl font-black text-gray-800 uppercase tracking-wide">Đánh giá từ khách hàng</h2>
+                            </div>
+
+                            {reviews.length > 0 ? (
+                                <div className="space-y-8">
+                                    {reviews.map((rev) => (
+                                        <div key={rev.id} className="flex gap-4 border-b border-gray-50 pb-6 last:border-0">
+                                            <div className="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary font-bold text-lg flex-shrink-0">
+                                                {rev.ho_ten ? rev.ho_ten.charAt(0).toUpperCase() : 'U'}
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <h4 className="font-bold text-gray-800">{rev.ho_ten || 'Người dùng Lumi'}</h4>
+                                                    <span className="text-xs text-gray-400">
+                                                        {new Date(rev.ngay_danh_gia).toLocaleDateString('vi-VN')}
+                                                    </span>
+                                                </div>
+                                                <div className="flex text-yellow-400 text-[10px] mb-2">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <FontAwesomeIcon key={i} icon={faStar} className={i < rev.so_sao ? "text-yellow-400" : "text-gray-200"} />
+                                                    ))}
+                                                </div>
+                                                <p className="text-gray-600 text-sm leading-relaxed">{rev.binh_luan}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-10">
+                                    <p className="text-gray-400 italic">Sản phẩm này chưa có đánh giá nào. Hãy là người đầu tiên đánh giá!</p>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -299,7 +351,7 @@ const ProductDetail = () => {
                     <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10">
                         <div className="flex items-center justify-between mb-8 border-b border-gray-100 pb-4">
                             <div className="flex items-center gap-3">
-                                <div className="w-1.5 h-6 bg-accent-primary rounded-full"></div>
+                                <div className="w-1.5 h-6 bg-blue-400 rounded-full"></div>
                                 <h2 className="text-xl font-black text-gray-800 uppercase tracking-wide">Có thể bạn sẽ thích</h2>
                             </div>
                         </div>
@@ -335,6 +387,6 @@ const ProductDetail = () => {
             </div>
         </div>
     );
-};
+}
 
 export default ProductDetail;
