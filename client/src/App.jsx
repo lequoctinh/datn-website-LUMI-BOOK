@@ -40,6 +40,7 @@ import PublisherManager from './admin/pages/PublisherManager';
 import CustomerManager from './admin/pages/CustomerManager';
 import OrderManager from './admin/pages/OrderManager';
 import VoucherManager from './admin/pages/VoucherManager';
+import ReviewManager from './admin/pages/ReviewManager';
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('lumi_token');
@@ -96,6 +97,7 @@ function App() {
           <Route path="customers" element={<CustomerManager />} />
           <Route path="orders" element={<OrderManager />} />
           <Route path="vouchers" element={<VoucherManager />} />
+          <Route path="reviews" element={<ReviewManager/>} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" />} />

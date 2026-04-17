@@ -175,14 +175,37 @@ exports.getMyOrders = async (req, res) => {
 
 exports.getOrderDetail = async (req, res) => {
     try {
-        const [order] = await pool.execute(`SELECT * FROM don_hang WHERE id = ?`, [req.params.id]);
+        const orderId = req.params.id;
+        const userId = req.user.id;
+
+        const [order] = await pool.execute(
+            `SELECT * FROM don_hang WHERE id = ?`, 
+            [orderId]
+        );
+
         const [items] = await pool.execute(
-            `SELECT ct.*, s.ten_sach, s.hinh_anh 
+            `SELECT 
+                ct.*, 
+                s.ten_sach, 
+                s.hinh_anh,
+                (SELECT COUNT(*) FROM danh_gia dg 
+                WHERE dg.don_hang_id = ct.don_hang_id 
+                AND dg.sach_id = ct.sach_id 
+                AND dg.nguoi_dung_id = ?) as da_danh_gia
             FROM don_hang_chi_tiet ct 
             JOIN sach s ON ct.sach_id = s.id 
-            WHERE ct.don_hang_id = ?`, [req.params.id]
+            WHERE ct.don_hang_id = ?`, 
+            [userId, orderId]
         );
-        res.json({ success: true, order: order[0], items });
+
+        res.json({ 
+            success: true, 
+            order: order[0], 
+            items: items.map(item => ({
+                ...item,
+                da_danh_gia: item.da_danh_gia > 0
+            }))
+        });
     } catch (error) {
         res.status(500).json({ message: 'Lỗi lấy chi tiết đơn hàng' });
     }
