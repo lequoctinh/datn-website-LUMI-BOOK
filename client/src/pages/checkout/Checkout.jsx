@@ -126,7 +126,7 @@ const Checkout = () => {
         setVoucherError('');
       }
     } catch (error) {
-      setVoucherError(error.response?.data?.message || "Mã không hợp lệ");
+      setVoucherError(error.response?.data?.message || "Mã đã sử dụng hoặc hết hạn");
       setAppliedVoucher(null);
     }
   };

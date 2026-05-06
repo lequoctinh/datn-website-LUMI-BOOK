@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faFilter, faSortAmountDown, faCartPlus } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faSortAmountDown, faCartPlus } from '@fortawesome/free-solid-svg-icons';
 import bookService from '../../services/bookService';
 import categoryService from '../../services/categoryService';
 import { useCart } from '../../context/cartContext';
@@ -29,6 +29,7 @@ const ProductList = () => {
     const [categories, setCategories] = useState([{ id: 'all', ten_danh_muc: "Tất cả" }]);
     const [loading, setLoading] = useState(true);
     const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+    const [addingId, setAddingId] = useState(null);
 
     const [filters, setFilters] = useState({
         page: 1,
@@ -47,7 +48,7 @@ const ProductList = () => {
                     setCategories([{ id: 'all', ten_danh_muc: "Tất cả" }, ...res.data]);
                 }
             } catch (error) {
-                console.error("Lỗi fetch categories:", error);
+                console.error(error);
             }
         };
         fetchCategories();
@@ -63,7 +64,7 @@ const ProductList = () => {
                     setPagination(res.pagination);
                 }
             } catch (error) {
-                console.error("Lỗi fetch books:", error);
+                console.error(error);
             } finally {
                 setLoading(false);
             }
@@ -79,9 +80,16 @@ const ProductList = () => {
         }));
     };
 
-    const handleAddToCart = (e, book) => {
+    const handleAddToCart = async (e, book) => {
         e.stopPropagation();
-        addToCart(book.id, 1);
+        if (book.so_luong_ton <= 0) return;
+        
+        setAddingId(book.id);
+        try {
+            await addToCart(book.id, 1);
+        } finally {
+            setTimeout(() => setAddingId(null), 500);
+        }
     };
 
     return (
@@ -174,87 +182,102 @@ const ProductList = () => {
                         </div>
 
                         {loading ? (
-                        <div className="flex flex-col items-center justify-center py-20 opacity-50">
-                            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-primary mb-4"></div>
-                            <p className="font-medium">Đang tìm sách...</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                            {books.map((book) => (
-                                <div 
-                                    key={book.id} 
-                                    className="group bg-surface rounded-2xl p-3 border border-border-light shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full"
-                                >
-                                    <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 bg-white">
-                                        <img 
-                                            src={book.hinh_anh ? (book.hinh_anh.startsWith('http') ? book.hinh_anh : `${IMAGE_BASE_URL}${book.hinh_anh}`) : 'https://via.placeholder.com/300x400?text=Lumi+Book'} 
-                                            alt={book.ten_sach} 
-                                            className="w-full h-full object-contain mix-blend-multiply p-2 transform group-hover:scale-110 transition-transform duration-500" 
-                                            onError={(e) => { e.target.src = 'https://via.placeholder.com/300x400?text=Lumi+Book'; }}
-                                        />
-                                        
-                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                            <button 
-                                                onClick={(e) => handleAddToCart(e, book)}
-                                                className="w-10 h-10 bg-white text-brand-primary rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300 shadow-lg"
-                                                title="Thêm vào giỏ"
-                                            >
-                                                <FontAwesomeIcon icon={faCartPlus} />
-                                            </button>
-                                            <button 
-                                                onClick={() => navigate(`/product/${book.id}`)}
-                                                className="w-10 h-10 bg-white text-brand-primary rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300 delay-75 shadow-lg"
-                                                title="Xem chi tiết"
-                                            >
-                                                <FontAwesomeIcon icon={faSearch} />
-                                            </button>
-                                        </div>
-                                        {book.gia_giam > 0 && book.gia_giam < book.gia_ban && (
-                                            <div className="absolute top-2 left-2 bg-accent-primary text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-md">
-                                                -{Math.round(((book.gia_ban - book.gia_giam) / book.gia_ban) * 100)}%
-                                            </div>
-                                        )}
-                                    </div>
+                            <div className="flex flex-col items-center justify-center py-20 opacity-50">
+                                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-primary mb-4"></div>
+                                <p className="font-medium">Đang tìm sách...</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                                {books.map((book) => {
+                                    const giaGoc = Number(book.gia_ban) || 0;
+                                    const giaGiam = Number(book.gia_giam) || 0;
+                                    const isDiscounted = giaGiam > 0 && giaGiam < giaGoc;
+                                    const percentDiscount = isDiscounted ? Math.round(((giaGoc - giaGiam) / giaGoc) * 100) : 0;
+                                    const currentPrice = isDiscounted ? giaGiam : giaGoc;
+                                    const isItemAdding = addingId === book.id;
 
-                                    <div className="flex flex-col flex-grow px-1">
-                                        <p className="text-[10px] uppercase tracking-widest text-brand-primary font-bold mb-1 opacity-60 truncate">
-                                            {book.tac_gia?.[0]?.ten_tac_gia || 'Lumi Select'}
-                                        </p>
-                                        <h3 
-                                            onClick={() => navigate(`/product/${book.id}`)}
-                                            className="font-heading text-sm sm:text-base text-text-primary line-clamp-2 hover:text-brand-primary transition-colors cursor-pointer mb-2 min-h-[2.5rem] leading-snug"
+                                    return (
+                                        <div 
+                                            key={book.id} 
+                                            className="group bg-surface rounded-2xl p-3 border border-border-light shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full"
                                         >
-                                            {book.ten_sach}
-                                        </h3>
-                                        
-                                        <div className="mt-auto pt-2 border-t border-dashed border-border-light">
-                                            {book.gia_giam > 0 && book.gia_giam < book.gia_ban ? (
-                                                <div className="flex flex-col">
-                                                    <span className="text-[11px] text-text-muted line-through opacity-70 leading-none mb-1">
-                                                        {formatPrice(book.gia_ban)}
-                                                    </span>
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-base sm:text-lg font-bold text-accent-primary">
-                                                            {formatPrice(book.gia_giam)}
-                                                        </span>
-                                                        <span className="text-[10px] bg-accent-primary/10 text-accent-primary px-1.5 py-0.5 rounded font-bold">
-                                                            -{Math.round(((book.gia_ban - book.gia_giam) / book.gia_ban) * 100)}%
-                                                        </span>
+                                            <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 bg-white">
+                                                <img 
+                                                    src={book.hinh_anh ? (book.hinh_anh.startsWith('http') ? book.hinh_anh : `${IMAGE_BASE_URL}${book.hinh_anh}`) : 'https://via.placeholder.com/300x400?text=Lumi+Book'} 
+                                                    alt={book.ten_sach} 
+                                                    className="w-full h-full object-contain mix-blend-multiply p-2 transform group-hover:scale-110 transition-transform duration-500" 
+                                                    onError={(e) => { e.target.src = 'https://via.placeholder.com/300x400?text=Lumi+Book'; }}
+                                                />
+                                                
+                                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                                    <button 
+                                                        onClick={(e) => handleAddToCart(e, book)}
+                                                        disabled={book.so_luong_ton <= 0 || isItemAdding}
+                                                        className="w-10 h-10 bg-white text-brand-primary rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300 shadow-lg disabled:opacity-50"
+                                                        title="Thêm vào giỏ"
+                                                    >
+                                                        <FontAwesomeIcon icon={isItemAdding ? "spinner" : faCartPlus} spin={isItemAdding} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => navigate(`/product/${book.id}`)}
+                                                        className="w-10 h-10 bg-white text-brand-primary rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300 delay-75 shadow-lg"
+                                                        title="Xem chi tiết"
+                                                    >
+                                                        <FontAwesomeIcon icon={faSearch} />
+                                                    </button>
+                                                </div>
+                                                
+                                                {isDiscounted && (
+                                                    <div className="absolute top-2 left-2 bg-accent-primary text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-md">
+                                                        -{percentDiscount}%
+                                                    </div>
+                                                )}
+
+                                                {book.so_luong_ton <= 0 && (
+                                                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                                        <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Hết hàng</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="flex flex-col flex-grow px-1">
+                                                <p className="text-[10px] uppercase tracking-widest text-brand-primary font-bold mb-1 opacity-60 truncate">
+                                                    {book.tac_gia?.length > 0 ? book.tac_gia.map(a => a.ten_tac_gia).join(', ') : 'Lumi Select'}
+                                                </p>
+                                                <h3 
+                                                    onClick={() => navigate(`/product/${book.id}`)}
+                                                    className="font-heading text-sm sm:text-base text-text-primary line-clamp-2 hover:text-brand-primary transition-colors cursor-pointer mb-2 min-h-[2.5rem] leading-snug"
+                                                >
+                                                    {book.ten_sach}
+                                                </h3>
+                                                
+                                                <div className="mt-auto pt-2 border-t border-dashed border-border-light">
+                                                    <div className="flex flex-col">
+                                                        <div className="h-4 flex items-center">
+                                                            {isDiscounted && (
+                                                                <span className="text-[11px] text-text-muted line-through opacity-70 leading-none">
+                                                                    {formatPrice(giaGoc)}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center justify-between">
+                                                            <span className={`text-base sm:text-lg font-bold ${isDiscounted ? 'text-accent-primary' : 'text-text-primary'}`}>
+                                                                {formatPrice(currentPrice)}
+                                                            </span>
+                                                            {isDiscounted && (
+                                                                <span className="text-[10px] bg-accent-primary/10 text-accent-primary px-1.5 py-0.5 rounded font-bold">
+                                                                    -{percentDiscount}%
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            ) : (
-                                                <div className="flex items-center justify-between py-1">
-                                                    <span className="text-base sm:text-lg font-bold text-text-primary">
-                                                        {formatPrice(book.gia_ban)}
-                                                    </span>
-                                                </div>
-                                            )}
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                                    );
+                                })}
+                            </div>
+                        )}
 
                         <div className="mt-12 flex justify-center gap-2">
                             {[...Array(pagination.totalPages)].map((_, i) => (

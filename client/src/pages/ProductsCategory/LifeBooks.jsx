@@ -28,13 +28,14 @@ const BookImage = ({ src, alt, discount }) => {
                 <div className="absolute inset-0 bg-gray-200 animate-pulse" />
             )}
             <img 
-                src={error ? fallbackImage : src} 
-                alt={alt} 
-                onLoad={() => setIsLoaded(true)}
-                onError={() => setError(true)}
-                className={`w-full h-full object-cover transform transition-all duration-700 ease-out
-                    ${isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}
-                    group-hover:scale-110`} 
+                src={book.hinh_anh ? `${IMAGE_BASE_URL}${book.hinh_anh}` : DEFAULT_IMAGE} 
+                alt={book.ten_sach} 
+                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                loading="lazy"
+                onError={(e) => { 
+                    e.target.onerror = null; 
+                    e.target.src = DEFAULT_IMAGE; 
+                }} 
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             {discount > 0 && (
@@ -65,7 +66,8 @@ const LifeBooks = () => {
         price_range: '',
         sort_by: 'newest'
     });
-
+const IMAGE_BASE_URL = 'http://localhost:5000/uploads/products/';
+const DEFAULT_IMAGE = 'https://via.placeholder.com/150';
     useEffect(() => {
         const fetchCategories = async () => {
             try {

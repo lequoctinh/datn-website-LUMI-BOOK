@@ -1,0 +1,41 @@
+import axiosClient from '../../utils/axiosClient';
+
+const adminOrderService = {
+    getAllOrders: () => {
+        return axiosClient.get('/admin/orders');
+    },
+
+    getOrderDetail: (id) => {
+        return axiosClient.get(`/admin/orders/${id}`);
+    },
+    updateStatus: (id, data) => {
+        return axiosClient.put(`/admin/update-order-status/${id}`, data);
+    },
+
+    deleteOrder: (id) => {
+        return axiosClient.delete(`/admin/orders/${id}`);
+    },
+
+
+    getDashboardStats: () => {
+        return axiosClient.get('/admin/stats/overview');
+    },
+
+    getChartData: (params) => {
+        return axiosClient.get('/admin/stats/charts', { params });
+    },
+
+    getLowStockBooks: () => {
+        return axiosClient.get('/admin/stats/low-stock');
+    },
+
+    getTopSellingBooks: () => {
+        return axiosClient.get('/admin/stats/top-selling');
+    },
+
+    getTopRatedBooks: () => {
+        return axiosClient.get('/admin/stats/top-rated');
+    }
+};
+
+export default adminOrderService;

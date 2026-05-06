@@ -5,16 +5,17 @@ import {
     faSearch, faShoppingCart, faUser, faPhone, 
     faBars, faBookOpen, faChartLine, faChild, faGlobe, 
     faFeather, faBrain, faLightbulb, faEllipsisH, faTimes,
-    faSignOutAlt,faTachometerAlt
+    faSignOutAlt, faTachometerAlt
 } from "@fortawesome/free-solid-svg-icons";
 import { useUser } from "../context/UserContext";
 import { useCart } from "../context/CartContext";
 import './css/Header.css';
+import NotificationBell from "./NotificationBell";
 
 const CATEGORIES = [
     { id: 1, name: "Sách Văn Học", icon: faBookOpen, desc: "Tiểu thuyết, Tản văn" , path:"/category/literature"},
-    { id: 2, name: "Kinh Tế - Làm Giàu", icon: faChartLine, desc: "Bài học kinh doanh",path:"/category/economy" },
-    { id: 3, name: "Thiếu Nhi", icon: faChild, desc: "Truyện tranh, Giáo dục",path:"/category/children"},
+    { id: 2, name: "Kinh Tế - Làm Giàu", icon: faChartLine, desc: "Bài học kinh doanh", path:"/category/economy" },
+    { id: 3, name: "Thiếu Nhi", icon: faChild, desc: "Truyện tranh, Giáo dục", path:"/category/children"},
     { id: 4, name: "Ngoại Ngữ", icon: faGlobe, desc: "Tiếng Anh, Nhật, Trung", path:"/category/language" },
     { id: 5, name: "Tiểu Sử - Hồi Ký", icon: faFeather, desc: "Danh nhân thế giới", path:"/category/biography" },
     { id: 6, name: "Tâm Lý - Kỹ Năng", icon: faBrain, desc: "Phát triển bản thân" , path:"/category/mentality" },
@@ -24,9 +25,41 @@ const CATEGORIES = [
 
 function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isVisible, setIsVisible] = useState(true);
+    const [lastScrollY, setLastScrollY] = useState(0);
+    
     const { user, logout } = useUser();
     const { cartItems } = useCart();
     const menuRef = useRef(null);
+
+    useEffect(() => {
+        const controlNavbar = () => {
+            if (typeof window !== 'undefined') {
+                const currentScrollY = window.scrollY;
+
+                // Luôn hiện khi ở sát đầu trang (tránh mảng trắng dư thừa)
+                if (currentScrollY < 10) {
+                    setIsVisible(true);
+                    setLastScrollY(currentScrollY);
+                    return;
+                }
+
+                if (isMenuOpen) return;
+
+                // Logic ẩn/hiện dựa trên hướng cuộn
+                if (currentScrollY > lastScrollY && currentScrollY > 100) {
+                    setIsVisible(false);
+                } else if (currentScrollY < lastScrollY) {
+                    setIsVisible(true);
+                }
+                
+                setLastScrollY(currentScrollY);
+            }
+        };
+
+        window.addEventListener('scroll', controlNavbar, { passive: true });
+        return () => window.removeEventListener('scroll', controlNavbar);
+    }, [lastScrollY, isMenuOpen]);
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -39,21 +72,29 @@ function Header() {
     }, [menuRef]);
 
     return (
-        <header className="header-wrapper w-full hidden md:block relative">
+        <header 
+            className={`header-wrapper w-full hidden md:block sticky top-0 z-[1000] transition-all duration-500 ease-in-out bg-white shadow-md ${
+                isVisible ? "translate-y-0" : "-translate-y-full"
+            }`}
+        >
             <div className="container mx-auto px-4 py-2 flex justify-between items-center text-sm border-b border-black/5">
                 <div className="text-gray-500 font-body">
                     <FontAwesomeIcon icon={faPhone} className="mr-2 text-brand-primary" />
                     Hotline: <span className="font-semibold text-brand-primary">0357699792</span>
                 </div>
                 <div className="flex gap-6 text-gray-500 font-body text-xs uppercase tracking-wider">
-                <Link to="/contact" className="cursor-pointer hover:text-brand-primary transition-colors">Liên Hệ</Link>
+                    <Link to="/contact" className="cursor-pointer hover:text-brand-primary transition-colors">Liên Hệ</Link>
                     <span className="cursor-pointer hover:text-brand-primary transition-colors">Câu hỏi thường gặp</span>
                 </div>
             </div>
 
             <div className="container mx-auto px-4 py-5 flex justify-between items-center gap-8">
-                <Link to="/" className="logo-text text-3xl cursor-pointer tracking-tighter shrink-0 decoration-transparent text-current">
-                    LUMI BOOK
+                <Link to="/" className="cursor-pointer shrink-0 py-1">
+                    <img 
+                        src="/LuMiBook_logo_kieu.png" 
+                        alt="Lumi Book Logo" 
+                        className="h-16 w-auto object-contain transition-transform hover:scale-105" 
+                    /> 
                 </Link>
 
                 <div className="flex-1 max-w-2xl relative flex group">
@@ -67,8 +108,7 @@ function Header() {
                     </button>
                 </div>
 
-                <div className="flex items-center gap-6 shrink-0">
-                    
+                <div className="flex items-center gap-4 shrink-0">
                     {user ? (
                         <div className="flex items-center gap-3 cursor-pointer group relative z-50">
                             <div className="w-10 h-10 rounded-full border border-brand-light/30 flex items-center justify-center overflow-hidden bg-surface">
@@ -86,7 +126,7 @@ function Header() {
                                 <span className="text-sm font-bold text-text-primary max-w-[100px] truncate">{user.ho_ten}</span>
                             </div>
 
-                            <div className="user-dropdown absolute top-full right-0 mt-0 w-56 bg-white rounded-xl py-2 hidden group-hover:block animate-fade-in-down">
+                            <div className="user-dropdown absolute top-full right-0 mt-0 w-56 bg-white rounded-xl py-2 hidden group-hover:block animate-fade-in-down shadow-xl border border-gray-100">
                                 <div className="px-4 py-3 border-b border-gray-100 mb-1">
                                     <p className="text-sm font-bold text-text-primary truncate">{user.ho_ten}</p>
                                     <p className="text-xs text-text-muted truncate">{user.email}</p>
@@ -125,7 +165,7 @@ function Header() {
                         </Link>
                     )}
                     
-                    <div className="w-[1px] h-8 bg-gray-300/50"></div>
+                    <div className="w-[1px] h-8 bg-gray-300/50 mx-1"></div>
 
                     <Link to="/cart" className="relative cursor-pointer group flex items-center justify-center w-12 h-12 transition-all duration-300">
                         <div className="w-10 h-10 flex items-center justify-center text-text-primary group-hover:text-brand-primary transition-colors">
@@ -137,8 +177,16 @@ function Header() {
                             </span>
                         )}
                     </Link>
+
+                    {user && (
+                        <>
+                            <div className="w-[1px] h-8 bg-gray-300/50 mx-1"></div>
+                            <NotificationBell />
+                        </>
+                    )}
                 </div>
             </div>
+
             <div className="border-t border-b border-brand-primary/10 bg-white shadow-sm relative z-40">
                 <div className="container mx-auto px-4 relative">
                     <div className="flex items-center justify-between h-14">
@@ -177,7 +225,7 @@ function Header() {
                                             </Link>
                                         ))}
                                     </div>
-                                    <Link to="/products" className="block"> 
+                                    <Link to="/products" className="block text-decoration-none"> 
                                         <div className="bg-brand-primary/5 p-3 text-center text-xs text-text-secondary font-bold uppercase tracking-widest border-t border-brand-primary/10 hover:bg-brand-primary/10 cursor-pointer transition-colors">
                                             Xem tất cả thể loại
                                         </div>
@@ -205,4 +253,5 @@ function Header() {
         </header>
     );
 }
+
 export default Header;

@@ -4,8 +4,17 @@ const checkoutService = {
     getCart: () => {
         return axiosClient.get('/cart');
     },
+    
     placeOrder: (orderData) => {
         return axiosClient.post('/checkout/place-order', orderData);
+    },
+
+    getMyOrders: () => {
+        return axiosClient.get('/checkout/my-orders');
+    },
+
+    getOrderDetail: (id) => {
+        return axiosClient.get(`/checkout/my-orders/${id}`);
     }
 };
 

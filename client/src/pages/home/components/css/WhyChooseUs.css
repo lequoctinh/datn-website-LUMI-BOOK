@@ -205,3 +205,59 @@
     color: #fff;
     transform: translateX(-50%) scale(1.1);
 }
+/* Tối ưu lại container chứa nội dung */
+.lumi-wcu-inner {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #fff;
+    transform: translateZ(20px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    padding: 0; /* Loại bỏ padding ở đây để ảnh có thể tràn viền */
+    text-align: center;
+}
+
+/* Định dạng lại khung chứa ảnh */
+.lumi-wcu-inner .aspect-\[4\/5\] {
+    aspect-ratio: 16 / 10; /* Đổi tỷ lệ thành hình chữ nhật ngang để bớt cao */
+    width: 100%;
+    margin-bottom: 0; /* Sát với phần text */
+    overflow: hidden;
+}
+
+.lumi-wcu-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Đảm bảo ảnh lấp đầy khung không để khoảng trắng */
+    display: block;
+}
+
+/* Khu vực chứa văn bản */
+.lumi-wcu-inner div.text-center {
+    padding: 1rem 1.25rem 1.5rem; /* Padding riêng cho phần chữ */
+    background: #fff;
+}
+
+.lumi-wcu-inner h3 {
+    font-family: 'Merriweather', serif;
+    font-size: 1.15rem; /* Thu nhỏ tiêu đề một chút cho cân đối */
+    font-weight: 700;
+    margin: 0.5rem 0; /* Giảm margin dư thừa */
+    color: #1F2937;
+}
+
+.lumi-wcu-inner p {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: #6B7280;
+    margin: 0;
+    /* Giới hạn độ rộng text để không quá loãng */
+    padding: 0 5px;
+}
+
+/* Điều chỉnh lại khung Frame cho ôm sát */
+.lumi-wcu-frame {
+    padding: 0; /* Giảm padding viền ngoài */
+    background: transparent;
+    border: none; /* Bỏ border ngoài nếu đã có bóng đổ ở inner */
+}

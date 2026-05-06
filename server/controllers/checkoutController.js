@@ -10,7 +10,7 @@ exports.createOrder = async (req, res) => {
         await connection.beginTransaction();
 
         const [cartItems] = await connection.execute(
-            `SELECT g.*, s.gia_ban, s.so_luong_ton 
+            `SELECT g.*, s.ten_sach, s.hinh_anh, s.gia_ban, s.so_luong_ton 
             FROM gio_hang g JOIN sach s ON g.sach_id = s.id 
             WHERE g.nguoi_dung_id = ?`, [userId]
         );
@@ -86,8 +86,10 @@ exports.createOrder = async (req, res) => {
 
         for (const item of cartItems) {
             await connection.execute(
-                `INSERT INTO don_hang_chi_tiet (don_hang_id, sach_id, so_luong, gia_luc_mua) VALUES (?, ?, ?, ?)`,
-                [orderId, item.sach_id, item.so_luong, item.gia_ban]
+                `INSERT INTO don_hang_chi_tiet 
+                (don_hang_id, sach_id, so_luong, gia_luc_mua, ten_sach_snapshot, hinh_anh_snapshot) 
+                VALUES (?, ?, ?, ?, ?, ?)`,
+                [orderId, item.sach_id, item.so_luong, item.gia_ban, item.ten_sach, item.hinh_anh]
             );
             await connection.execute(
                 `UPDATE sach SET so_luong_ton = so_luong_ton - ? WHERE id = ?`,
@@ -130,13 +132,22 @@ exports.updateOrder = async (req, res) => {
 // 3. API HỦY ĐƠN HÀNG (Cộng lại kho)
 exports.cancelOrder = async (req, res) => {
     const { id } = req.params;
+    const { ly_do } = req.body; 
     const connection = await pool.getConnection();
+
     try {
         await connection.beginTransaction();
-        const [order] = await connection.execute('SELECT trang_thai, ma_khuyen_mai_id FROM don_hang WHERE id = ?', [id]);
+        const [order] = await connection.execute(
+            'SELECT trang_thai, ma_khuyen_mai_id, nguoi_dung_id FROM don_hang WHERE id = ?', 
+            [id]
+        );
 
-        if (order[0].trang_thai !== 'cho_duyet') {
-            return res.status(400).json({ message: 'Đơn hàng đã được xử lý, không thể hủy!' });
+        if (!order[0]) {
+            return res.status(404).json({ message: 'Không tìm thấy đơn hàng!' });
+        }
+        const allowedStatuses = ['cho_duyet']; 
+        if (!allowedStatuses.includes(order[0].trang_thai)) {
+            return res.status(400).json({ message: 'Đơn hàng đã được xử lý hoặc vận chuyển, không thể hủy!' });
         }
         if (order[0].ma_khuyen_mai_id) {
             await connection.execute(
@@ -144,18 +155,36 @@ exports.cancelOrder = async (req, res) => {
                 [order[0].ma_khuyen_mai_id]
             );
         }
-        const [items] = await connection.execute('SELECT sach_id, so_luong FROM don_hang_chi_tiet WHERE don_hang_id = ?', [id]);
+        const [items] = await connection.execute(
+            'SELECT sach_id, so_luong FROM don_hang_chi_tiet WHERE don_hang_id = ?', 
+            [id]
+        );
         for (const item of items) {
-            await connection.execute('UPDATE sach SET so_luong_ton = so_luong_ton + ? WHERE id = ?', [item.so_luong, item.sach_id]);
+            await connection.execute(
+                'UPDATE sach SET so_luong_ton = so_luong_ton + ? WHERE id = ?', 
+                [item.so_luong, item.sach_id]
+            );
         }
-
-        await connection.execute(`UPDATE don_hang SET trang_thai = 'da_huy' WHERE id = ?`, [id]);
+        await connection.execute(
+                `UPDATE don_hang SET trang_thai = 'da_huy', ly_do_huy = ? WHERE id = ?`, 
+                [ly_do || 'Khách hàng chủ động hủy đơn', id]
+            );
+        const tieuDe = `Đơn hàng #${id} đã bị hủy`;
+        const noiDung = `Đơn hàng của bạn đã được hủy thành công. Lý do: ${ly_do || 'Theo yêu cầu của khách hàng'}.`;
+        
+        await connection.execute(
+            `INSERT INTO thong_bao (nguoi_dung_id, don_hang_id, tieu_de, noi_dung, trang_thai_doc) 
+                VALUES (?, ?, ?, ?, 0)`,
+            [order[0].nguoi_dung_id, id, tieuDe, noiDung]
+        );
 
         await connection.commit();
-        res.json({ success: true, message: 'Đã hủy đơn hàng' });
+        res.json({ success: true, message: 'Đã hủy đơn hàng và gởi thông báo thành công' });
+
     } catch (error) {
         await connection.rollback();
-        res.status(500).json({ message: 'Lỗi khi hủy đơn hàng' });
+        console.error("Lỗi hủy đơn:", error);
+        res.status(500).json({ message: 'Lỗi hệ thống khi hủy đơn hàng' });
     } finally {
         connection.release();
     }
@@ -185,15 +214,14 @@ exports.getOrderDetail = async (req, res) => {
 
         const [items] = await pool.execute(
             `SELECT 
-                ct.*, 
-                s.ten_sach, 
-                s.hinh_anh,
+                ct.id, ct.don_hang_id, ct.sach_id, ct.so_luong, ct.gia_luc_mua,
+                ct.ten_sach_snapshot as ten_sach, 
+                ct.hinh_anh_snapshot as hinh_anh,
                 (SELECT COUNT(*) FROM danh_gia dg 
                 WHERE dg.don_hang_id = ct.don_hang_id 
                 AND dg.sach_id = ct.sach_id 
                 AND dg.nguoi_dung_id = ?) as da_danh_gia
             FROM don_hang_chi_tiet ct 
-            JOIN sach s ON ct.sach_id = s.id 
             WHERE ct.don_hang_id = ?`, 
             [userId, orderId]
         );

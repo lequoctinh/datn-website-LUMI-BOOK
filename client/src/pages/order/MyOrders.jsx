@@ -10,9 +10,10 @@ import { toast } from 'react-toastify';
 import { useCart } from '../../context/cartContext';
 
 const MyOrders = () => {
-    const { addToCart } = useCart();
+  const { addToCart } = useCart();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,40 +31,6 @@ const MyOrders = () => {
     }
   };
 
-  const confirmCancel = (orderId) => {
-    toast(
-      ({ closeToast }) => (
-        <div className="p-2">
-          <p className="text-text-primary font-bold mb-3 text-lg">Bạn chắc chắn muốn hủy đơn?</p>
-          <p className="text-text-secondary text-sm mb-6">Đơn hàng #LUMI-{orderId} sẽ bị dừng xử lý và sản phẩm sẽ được hoàn lại kho.</p>
-          <div className="flex justify-end gap-3">
-            <button 
-              onClick={closeToast}
-              className="px-5 py-2.5 rounded-xl bg-background text-text-primary font-bold text-sm"
-            >
-              Để tôi xem lại
-            </button>
-            <button 
-              onClick={() => {
-                executeCancel(orderId);
-                closeToast();
-              }}
-              className="px-5 py-2.5 rounded-xl bg-rose-500 text-white font-bold text-sm shadow-lg shadow-rose-200"
-            >
-              Xác nhận hủy đơn
-            </button>
-          </div>
-        </div>
-      ),
-      {
-        position: "top-center",
-        autoClose: false,
-        closeOnClick: false,
-        draggable: false,
-        className: 'rounded-[32px] p-8 shadow-2xl border border-border-light',
-      }
-    );
-  };
   const executeCancel = async (orderId) => {
     try {
       await axiosClient.put(`/checkout/cancel-order/${orderId}`);
@@ -74,143 +41,153 @@ const MyOrders = () => {
     }
   };
 
+  const confirmCancel = (orderId) => {
+    toast(
+      ({ closeToast }) => (
+        <div className="py-2">
+          <p className="text-gray-900 font-bold mb-2">Xác nhận hủy đơn hàng?</p>
+          <p className="text-gray-600 text-sm mb-5">Hành động này không thể hoàn tác cho đơn #LUMI-{orderId}.</p>
+          <div className="flex justify-end gap-2">
+            <button onClick={closeToast} className="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 rounded">Đóng</button>
+            <button 
+              onClick={() => { executeCancel(orderId); closeToast(); }}
+              className="px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded"
+            >
+              Hủy đơn
+            </button>
+          </div>
+        </div>
+      ),
+      { position: "top-center", autoClose: false }
+    );
+  };
+
   const handleReorder = async (orderId) => {
     try {
       const res = await axiosClient.get(`/checkout/my-orders/${orderId}`);
       const itemsToReorder = res.items; 
-  
-      if (!itemsToReorder || itemsToReorder.length === 0) {
-        toast.error("Không tìm thấy sản phẩm trong đơn hàng này");
-        return;
-      }
-      await Promise.all(
-        itemsToReorder.map(item => addToCart(item.sach_id, item.so_luong))
-      );
-  
-      toast.success("Đã thêm toàn bộ sản phẩm vào giỏ hàng!");
+      if (!itemsToReorder || itemsToReorder.length === 0) return;
+      await Promise.all(itemsToReorder.map(item => addToCart(item.sach_id, item.so_luong)));
+      toast.success("Đã thêm sản phẩm vào giỏ hàng");
       navigate('/cart'); 
-  
     } catch (err) {
-      toast.error("Có lỗi xảy ra khi thực hiện mua lại");
-      console.error(err);
+      toast.error("Lỗi khi mua lại");
     }
   };
 
-  const getStatusInfo = (status) => {
+  const getStatusStyle = (status) => {
     const map = {
-      'cho_duyet': { text: 'Chờ xử lý', color: 'text-amber-500', bg: 'bg-amber-50', icon: faBox },
-      'dang_giao': { text: 'Đang vận chuyển', color: 'text-blue-500', bg: 'bg-blue-50', icon: faTruck },
-      'da_giao': { text: 'Giao thành công', color: 'text-emerald-500', bg: 'bg-emerald-50', icon: faCheckCircle },
-      'da_huy': { text: 'Đã hủy đơn', color: 'text-rose-400', bg: 'bg-rose-50', icon: faTimesCircle },
+      'cho_duyet': { text: 'Chờ xử lý', color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-100', icon: faBox },
+      'dang_giao': { text: 'Đang giao', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', icon: faTruck },
+      'da_giao': { text: 'Thành công', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-100', icon: faCheckCircle },
+      'da_huy': { text: 'Đã hủy', color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-100', icon: faTimesCircle },
     };
     return map[status] || map['cho_duyet'];
   };
+
+  const filteredOrders = orders.filter(o => o.id.toString().includes(searchTerm));
+
   return (
-    <div className="min-h-screen bg-[#F8F9FB] py-16 px-4 font-body">
-      <div className="max-w-5xl mx-auto">
-        
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+    <div className="min-h-screen bg-gray-50 py-10 px-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="font-heading text-4xl text-text-primary mb-3 tracking-tight">Đơn hàng của tôi</h1>
-            <p className="text-text-secondary font-medium italic">Lumi Book - Nơi lưu giữ hành trình tri thức của bạn</p>
+            <h1 className="text-2xl font-bold text-gray-900">Quản lý đơn hàng</h1>
+            <p className="text-sm text-gray-500 mt-1">Xem và theo dõi lịch sử mua sắm của bạn</p>
           </div>
-          <div className="relative">
+          <div className="relative w-full md:w-72">
             <input 
               type="text" 
-              placeholder="Tìm mã đơn hàng #LUMI..." 
-              className="pl-12 pr-6 py-4 rounded-2xl border border-border-default focus:border-brand-primary outline-none bg-white w-full md:w-80 shadow-sm transition-all"
+              placeholder="Tìm mã đơn hàng..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-gray-400 outline-none transition-all"
             />
-            <FontAwesomeIcon icon={faSearch} className="absolute left-5 top-1/2 -translate-y-1/2 text-text-secondary/40" />
+            <FontAwesomeIcon icon={faSearch} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
           </div>
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-32">
-            <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
+          <div className="flex justify-center py-20">
+            <div className="w-8 h-8 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
           </div>
-        ) : orders.length === 0 ? (
-          <div className="bg-white rounded-[40px] p-24 text-center border border-border-light shadow-sm">
-            <p className="text-text-secondary mb-8">Bạn chưa có giao dịch nào.</p>
-            <button onClick={() => navigate('/')} className="bg-text-primary text-white px-10 py-4 rounded-2xl font-bold hover:bg-black transition-all">Mua sắm ngay</button>
+        ) : filteredOrders.length === 0 ? (
+          <div className="bg-white border border-gray-200 rounded-lg p-16 text-center shadow-sm">
+            <div className="text-gray-300 mb-4 text-5xl">
+              <FontAwesomeIcon icon={faBox} />
+            </div>
+            <p className="text-gray-500 mb-6">Không tìm thấy đơn hàng nào phù hợp.</p>
+            <button onClick={() => navigate('/')} className="bg-gray-900 text-white px-8 py-2.5 rounded font-medium text-sm hover:bg-gray-800 transition-all">Mua sắm ngay</button>
           </div>
         ) : (
-          <div className="space-y-8">
-            {orders.map((order) => {
-              const status = getStatusInfo(order.trang_thai);
+          <div className="space-y-4">
+            {filteredOrders.map((order) => {
+              const style = getStatusStyle(order.trang_thai);
               return (
-                <div key={order.id} className="bg-white rounded-[32px] border border-border-light overflow-hidden transition-all duration-500 hover:border-brand-primary/20">
-                  <div className="p-8 md:p-10">
-                    
-                    <div className="flex flex-wrap justify-between items-center gap-6 mb-10 pb-8 border-b border-dashed border-border-default">
-                      <div className="flex items-center gap-5">
-                        <div className={`w-14 h-14 rounded-2xl ${status.bg} ${status.color} flex items-center justify-center text-2xl shadow-sm`}>
-                          <FontAwesomeIcon icon={status.icon} />
+                <div key={order.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                  <div className="px-6 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4 bg-gray-50/50">
+                    <div className="flex items-center gap-4">
+                      <span className="font-mono font-bold text-gray-900 text-lg">#LUMI-{order.id}</span>
+                      <span className={`flex items-center gap-1.5 px-3 py-1 rounded border text-xs font-semibold ${style.bg} ${style.color} ${style.border}`}>
+                        <FontAwesomeIcon icon={style.icon} className="text-[10px]" />
+                        {style.text.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Ngày đặt: <span className="text-gray-700 font-medium">{new Date(order.ngay_dat).toLocaleDateString('vi-VN')}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Người nhận</p>
+                        <div className="flex items-center gap-2 text-gray-900 font-semibold">
+                          <FontAwesomeIcon icon={faUser} className="text-gray-400 text-xs w-4" />
+                          {order.ho_ten_nguoi_nhan}
                         </div>
-                        <div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xl font-black text-text-primary tracking-tight">#LUMI-{order.id}</span>
-                            <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${status.bg} ${status.color}`}>
-                              {status.text}
-                            </span>
-                          </div>
-                          <p className="text-sm text-text-secondary mt-1">Ngày đặt: {new Date(order.ngay_dat).toLocaleString('vi-VN')}</p>
+                        <div className="flex items-center gap-2 text-gray-600 text-sm">
+                          <FontAwesomeIcon icon={faPhone} className="text-gray-400 text-xs w-4" />
+                          {order.sdt_nguoi_nhan}
                         </div>
                       </div>
-                      
-                      <div className="text-right">
-                        <p className="text-xs text-text-secondary font-bold uppercase tracking-widest mb-1">Tổng cộng</p>
-                        <p className="text-3xl font-black text-brand-primary leading-none">{Number(order.tong_tien).toLocaleString()} đ</p>
+                      <div className="space-y-2">
+                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Địa chỉ giao hàng</p>
+                        <div className="flex items-start gap-2 text-gray-600 text-sm leading-relaxed">
+                          <FontAwesomeIcon icon={faMapMarkerAlt} className="text-gray-400 text-xs w-4 mt-1" />
+                          {order.dia_chi_giao_hang}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                      
-                      <div className="space-y-4 bg-background/30 p-6 rounded-2xl border border-border-light">
-                        <p className="text-xs font-black text-text-secondary uppercase tracking-[0.2em] mb-4">Thông tin nhận hàng</p>
-                        <div className="flex items-center gap-4 text-text-primary font-bold">
-                          <FontAwesomeIcon icon={faUser} className="text-brand-primary w-4" />
-                          <span>{order.ho_ten_nguoi_nhan}</span>
-                        </div>
-                        <div className="flex items-center gap-4 text-text-secondary font-medium">
-                          <FontAwesomeIcon icon={faPhone} className="text-brand-primary w-4" />
-                          <span>{order.sdt_nguoi_nhan}</span>
-                        </div>
-                        <div className="flex items-start gap-4 text-text-secondary text-sm leading-relaxed">
-                          <FontAwesomeIcon icon={faMapMarkerAlt} className="text-brand-primary w-4 mt-1" />
-                          <span>{order.dia_chi_giao_hang}</span>
-                        </div>
+                    <div className="flex flex-col justify-between items-end border-l border-gray-100 pl-8 h-full">
+                      <div className="text-right">
+                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Thành tiền</p>
+                        <p className="text-2xl font-bold text-red-600">{Number(order.tong_tien).toLocaleString()}đ</p>
                       </div>
-                      <div className="flex flex-col justify-center gap-4">
-                        {order.trang_thai === 'cho_duyet' && (
-                          <div className="grid grid-cols-2 gap-4">
-                            <button onClick={() => navigate(`/update-order/${order.id}`)} className="flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-border-default hover:border-text-primary font-bold text-sm transition-all shadow-sm bg-white">
-                              <FontAwesomeIcon icon={faEdit} /> Chỉnh sửa
+                      
+                      <div className="flex flex-col gap-2 w-full mt-6">
+                        {order.trang_thai === 'cho_duyet' ? (
+                          <div className="flex gap-2 w-full">
+                            <button onClick={() => navigate(`/update-order/${order.id}`)} className="flex-1 py-2 border border-gray-300 rounded text-xs font-bold hover:bg-gray-50 transition-colors">
+                              <FontAwesomeIcon icon={faEdit} className="mr-1" /> Sửa
                             </button>
-                            <button onClick={() => confirmCancel(order.id)} className="flex items-center justify-center gap-2 py-4 rounded-2xl bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold text-sm transition-all shadow-sm">
-                              <FontAwesomeIcon icon={faTrashAlt} /> Hủy đơn
+                            <button onClick={() => confirmCancel(order.id)} className="flex-1 py-2 border border-red-200 text-red-600 rounded text-xs font-bold hover:bg-red-50 transition-colors">
+                              <FontAwesomeIcon icon={faTrashAlt} className="mr-1" /> Hủy
                             </button>
                           </div>
-                        )}
-
-                        {order.trang_thai === 'dang_giao' && (
-                          <button className="w-full flex items-center justify-center gap-3 py-5 rounded-2xl bg-brand-primary text-white font-bold shadow-lg shadow-brand-primary/20 hover:brightness-110 transition-all">
-                            <FontAwesomeIcon icon={faTruck} className="animate-pulse" /> Theo dõi đơn hàng
-                          </button>
-                        )}
-
-                        {(order.trang_thai === 'da_huy' || order.trang_thai === 'da_giao') && (
-                          <button onClick={() => handleReorder(order.id)} className="w-full flex items-center justify-center gap-3 py-5 rounded-2xl bg-text-primary text-white font-bold hover:bg-black transition-all shadow-xl active:scale-95">
-                            <FontAwesomeIcon icon={faRedo} /> Mua lại sản phẩm
+                        ) : (
+                          <button onClick={() => handleReorder(order.id)} className="w-full py-2 bg-gray-900 text-white rounded text-xs font-bold hover:bg-gray-800 transition-colors">
+                            <FontAwesomeIcon icon={faRedo} className="mr-1" /> MUA LẠI
                           </button>
                         )}
                         <button 
-                        onClick={() => navigate(`/order-detail/${order.id}`)} 
-                        className="text-center text-xs font-bold text-text-secondary hover:text-brand-primary transition-colors py-2 uppercase tracking-widest mt-2"
+                          onClick={() => navigate(`/order-detail/${order.id}`)} 
+                          className="w-full py-2 text-center text-[11px] font-bold text-blue-600 hover:underline flex items-center justify-center gap-1 uppercase"
                         >
-                        Xem chi tiết hóa đơn <FontAwesomeIcon icon={faChevronRight} className="ml-1 text-[8px]" />
+                          Chi tiết hóa đơn <FontAwesomeIcon icon={faChevronRight} className="text-[8px]" />
                         </button>
                       </div>
-
                     </div>
                   </div>
                 </div>

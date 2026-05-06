@@ -34,9 +34,7 @@ const BestSellerBooks = () => {
 
   const handleAddToCart = async (e, book) => {
     e.stopPropagation();
-    
     if (book.so_luong_ton <= 0) return;
-
     setAddingId(book.id);
     try {
       await addToCart(book.id, 1);
@@ -45,7 +43,7 @@ const BestSellerBooks = () => {
     }
   };
 
-return (
+  return (
     <section className="w-full bg-[#FDFBF7] py-24 flex justify-center overflow-visible">
       <div className="w-full max-w-[1200px] px-4">
         
@@ -67,9 +65,11 @@ return (
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-8 gap-y-12 ln-perspective">
             {books.map((book, index) => {
-              const isDiscounted = book.gia_giam > 0 && book.gia_giam < book.gia_ban;
-              const percentDiscount = isDiscounted ? Math.round(((book.gia_ban - book.gia_giam) / book.gia_ban) * 100) : 0;
-              const currentPrice = isDiscounted ? book.gia_giam : book.gia_ban;
+              const giaGoc = Number(book.gia_ban) || 0;
+              const giaGiam = Number(book.gia_giam) || 0;
+              const isDiscounted = giaGiam > 0 && giaGiam < giaGoc;
+              const percentDiscount = isDiscounted ? Math.round(((giaGoc - giaGiam) / giaGoc) * 100) : 0;
+              const currentPrice = isDiscounted ? giaGiam : giaGoc;
               const isItemAdding = addingId === book.id;
 
               return (
@@ -82,7 +82,7 @@ return (
                       <span className="text-[10px] font-bold">#{index + 1}</span>
                   </div>
 
-                  {isDiscounted && (
+                  {isDiscounted && percentDiscount > 0 && (
                       <div className="discount-tag">-{percentDiscount}%</div>
                   )}
 
@@ -115,7 +115,7 @@ return (
                         {book.ten_sach}
                       </h3>
                       <p className="text-text-muted text-xs uppercase tracking-wide mt-1 font-body">
-                        {book.tac_gia && book.tac_gia.length > 0 
+                        {book.tac_gia?.length > 0 
                           ? book.tac_gia.map(a => a.ten_tac_gia).join(', ') 
                           : 'Nhiều tác giả'}
                       </p>
@@ -125,15 +125,15 @@ return (
 
                     <div className="flex items-end justify-between">
                       <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
+                        <div className="h-4 flex items-center">
                           {isDiscounted && (
                             <span className="text-xs text-text-muted line-through">
-                              {Number(book.gia_ban).toLocaleString('vi-VN')}đ
+                              {giaGoc.toLocaleString('vi-VN')}đ
                             </span>
                           )}
                         </div>
                         <span className="font-heading text-xl font-bold text-accent-primary">
-                          {Number(currentPrice).toLocaleString('vi-VN')}đ
+                          {currentPrice.toLocaleString('vi-VN')}đ
                         </span>
                       </div>
                       

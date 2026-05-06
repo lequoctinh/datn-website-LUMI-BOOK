@@ -46,8 +46,12 @@ function HeaderMobile() {
                     >
                         <FontAwesomeIcon icon={faBars} />
                     </button>
-                    <Link to="/" className="logo-text text-xl font-heading font-black tracking-tighter text-brand-primary decoration-transparent">
-                        LUMI BOOK
+                    <Link to="/" className="shrink-0 flex items-center">
+                        <img 
+                            src="/LuMiBook_logo_kieu.png" 
+                            alt="Lumi Book Logo" 
+                            className="h-14 w-auto object-contain" 
+                        />
                     </Link>
                 </div>
                 <div className="flex items-center gap-3">

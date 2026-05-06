@@ -8,7 +8,13 @@ function Footer() {
             <div className="lumi-footer-container">
                 <div className="lumi-footer-top">
                     <div className="lumi-footer-brand">
-                        <a href="/" className="lumi-footer-logo">LUMI BOOK</a>
+                        <a href="/" className="lumi-footer-logo">
+                            <img 
+                                src="/LuMiBook_logo_.png" 
+                                alt="Lumi Book Logo" 
+                                style={{ height: '140px', width: '500px', objectFit: 'contain' }} 
+                            />
+                        </a>
                         <p className="lumi-footer-desc">
                             Hành trình tri thức bắt đầu từ những trang sách. Chúng tôi cam kết mang đến những ấn phẩm tinh hoa, lan tỏa văn hóa đọc đến mọi miền tổ quốc.
                         </p>
