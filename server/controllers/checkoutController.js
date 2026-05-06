@@ -1,4 +1,23 @@
 const { pool } = require('../config/db');
+const moment = require('moment');
+const crypto = require('crypto');
+const queryString = require('qs');
+
+function sortObject(obj) {
+    let sorted = {};
+    let str = [];
+    let key;
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            str.push(encodeURIComponent(key));
+        }
+    }
+    str.sort();
+    for (key = 0; key < str.length; key++) {
+        sorted[str[key]] = encodeURIComponent(obj[str[key]]).replace(/%20/g, "+");
+    }
+    return sorted;
+}
 
 // 1. API CHECKOUT: Đặt hàng từ giỏ hàng
 exports.createOrder = async (req, res) => {
@@ -79,8 +98,8 @@ exports.createOrder = async (req, res) => {
         const tong_tien_sau_giam = Math.round(Number(tong_tien) - so_tien_giam);
 
         const [orderResult] = await connection.execute(
-            `INSERT INTO don_hang (nguoi_dung_id, tong_tien, phuong_thuc_thanh_toan, ho_ten_nguoi_nhan, sdt_nguoi_nhan, dia_chi_giao_hang, trang_thai, ma_khuyen_mai_id) VALUES (?, ?, ?, ?, ?, ?, 'cho_duyet', ?)`,
-            [userId, tong_tien_sau_giam, phuong_thuc_thanh_toan, ho_ten_nhan, sdt_nhan, dia_chi_nhan, final_voucher_id]
+            `INSERT INTO don_hang (nguoi_dung_id, tong_tien, phuong_thuc_thanh_toan, ho_ten_nguoi_nhan, sdt_nguoi_nhan, dia_chi_giao_hang, trang_thai, ma_khuyen_mai_id, ghi_chu) VALUES (?, ?, ?, ?, ?, ?, 'cho_duyet', ?, ?)`,
+            [userId, tong_tien_sau_giam, phuong_thuc_thanh_toan, ho_ten_nhan, sdt_nhan, dia_chi_nhan, final_voucher_id, ghi_chu]
         );
         const orderId = orderResult.insertId;
 
@@ -99,13 +118,94 @@ exports.createOrder = async (req, res) => {
 
         await connection.execute(`DELETE FROM gio_hang WHERE nguoi_dung_id = ?`, [userId]);
 
+        // --- BẮT ĐẦU LOGIC VNPAY ---
+        if (phuong_thuc_thanh_toan === 'vnpay') {
+            const date = new Date();
+            const createDate = moment(date).format('YYYYMMDDHHmmss');
+            
+            const tmnCode = process.env.VNP_TMN_CODE;
+            const secretKey = process.env.VNP_HASH_SECRET;
+            const vnpUrl = process.env.VNP_URL;
+            const returnUrl = process.env.VNP_RETURN_URL;
+
+            let vnp_Params = {};
+            vnp_Params['vnp_Version'] = '2.1.0';
+            vnp_Params['vnp_Command'] = 'pay';
+            vnp_Params['vnp_TmnCode'] = tmnCode;
+            vnp_Params['vnp_Locale'] = 'vn';
+            vnp_Params['vnp_CurrCode'] = 'VND';
+            vnp_Params['vnp_TxnRef'] = orderId;
+            vnp_Params['vnp_OrderInfo'] = 'Thanh toan don hang #' + orderId;
+            vnp_Params['vnp_OrderType'] = 'other';
+            vnp_Params['vnp_Amount'] = tong_tien_sau_giam * 100; // VNPay nhân 100 theo đơn vị đồng
+            vnp_Params['vnp_ReturnUrl'] = returnUrl;
+            vnp_Params['vnp_IpAddr'] = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+            vnp_Params['vnp_CreateDate'] = createDate;
+
+            vnp_Params = sortObject(vnp_Params);
+
+            const signData = queryString.stringify(vnp_Params, { encode: false });
+            const hmac = crypto.createHmac("sha512", secretKey);
+            const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex"); 
+            vnp_Params['vnp_SecureHash'] = signed;
+            
+            const paymentUrl = vnpUrl + '?' + queryString.stringify(vnp_Params, { encode: false });
+
+            await connection.commit();
+            return res.json({ success: true, message: 'Chuyển hướng thanh toán VNPay', paymentUrl, orderId });
+        }
+        // --- KẾT THÚC LOGIC VNPAY ---
+
         await connection.commit();
         res.json({ success: true, message: 'Đặt hàng thành công!', orderId });
+
     } catch (error) {
         await connection.rollback();
         res.status(500).json({ message: error.message || 'Lỗi khi đặt hàng' });
     } finally {
         connection.release();
+    }
+};
+
+// 1.1 API XỬ LÝ IPN (VNPay gọi ngầm để cập nhật trạng thái)
+exports.vnpayIpn = async (req, res) => {
+    let vnp_Params = req.query;
+    let secureHash = vnp_Params['vnp_SecureHash'];
+
+    delete vnp_Params['vnp_SecureHash'];
+    delete vnp_Params['vnp_SecureHashType'];
+
+    vnp_Params = sortObject(vnp_Params);
+    const secretKey = process.env.VNP_HASH_SECRET;
+    const signData = queryString.stringify(vnp_Params, { encode: false });
+    const hmac = crypto.createHmac("sha512", secretKey);
+    const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex");
+
+    if (secureHash === signed) {
+        const orderId = vnp_Params['vnp_TxnRef'];
+        const rspCode = vnp_Params['vnp_ResponseCode'];
+
+        try {
+            const [orders] = await pool.execute('SELECT * FROM don_hang WHERE id = ?', [orderId]);
+            const order = orders[0];
+
+            if (order) {
+                if (rspCode === '00') {
+                    if (order.trang_thai === 'cho_duyet') {
+                        await pool.execute('UPDATE don_hang SET trang_thai = "cho_duyet", thanh_toan = "da_thanh_toan" WHERE id = ?', [orderId]);
+                    }
+                    res.status(200).json({ RspCode: '00', Message: 'Confirm Success' });
+                } else {
+                    res.status(200).json({ RspCode: '00', Message: 'Confirm Success (Transaction Failed)' });
+                }
+            } else {
+                res.status(200).json({ RspCode: '01', Message: 'Order not found' });
+            }
+        } catch (dbError) {
+            res.status(200).json({ RspCode: '99', Message: 'Database error' });
+        }
+    } else {
+        res.status(200).json({ RspCode: '97', Message: 'Checksum failed' });
     }
 };
 

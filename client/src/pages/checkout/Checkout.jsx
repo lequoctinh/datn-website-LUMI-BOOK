@@ -100,12 +100,17 @@ const Checkout = () => {
       const payload = {
         ...formData,
         phuong_thuc_thanh_toan: paymentMethod,
-        ma_khuyen_mai_id: appliedVoucher ? appliedVoucher.id : null,
-        tong_tien: subtotal - (appliedVoucher ? Number(appliedVoucher.so_tien_giam) : 0)
+        ma_khuyen_mai_id: appliedVoucher ? appliedVoucher.id : null
       };
+      
       const response = await axiosClient.post('/checkout/place-order', payload);
+      
       if (response.success) {
-        navigate('/order-success', { state: { orderId: response.orderId } });
+        if (response.paymentUrl) {
+          window.location.href = response.paymentUrl;
+        } else {
+          navigate('/order-success', { state: { orderId: response.orderId } });
+        }
       }
     } catch (error) {
       alert(error.response?.data?.message || "Đặt hàng thất bại");
@@ -117,7 +122,7 @@ const Checkout = () => {
   const handleApplyVoucher = async () => {
     if (!voucherCode.trim()) return setVoucherError("Vui lòng nhập mã");
     try {
-     const response = await axiosClient.post('/vouchers/check', {
+    const response = await axiosClient.post('/vouchers/check', {
             ma_code: voucherCode.trim(),
             tong_tien_don_hang: subtotal
         });
@@ -162,12 +167,6 @@ const Checkout = () => {
                 </button>
               </div>
 
-              {formData.dia_chi_nhan && (
-                <div className="mb-4 p-2 bg-green-50 border border-green-100 rounded-lg text-[11px] text-green-700">
-                  ✓ Đã tự động áp dụng thông tin từ địa chỉ mặc định của bạn.
-                </div>
-              )}
-              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-text-secondary">Họ và tên</label>
@@ -190,7 +189,6 @@ const Checkout = () => {
                 </div>
               </div>
             </section>
-
             <section className="bg-surface p-6 rounded-2xl shadow-card border border-border-light">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-8 h-8 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary">
@@ -198,16 +196,30 @@ const Checkout = () => {
                 </div>
                 <h2 className="font-heading text-xl text-text-primary">Phương thức thanh toán</h2>
               </div>
-              <label className={`flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'cod' ? 'border-brand-primary bg-brand-primary/5' : 'border-border-light'}`}>
-                <div className="flex items-center gap-4">
-                  <input type="radio" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="accent-brand-primary w-4 h-4" />
-                  <div>
-                    <p className="font-semibold text-text-primary">Thanh toán khi nhận hàng (COD)</p>
-                    <p className="text-xs text-text-secondary italic">Trả tiền khi nhận sách.</p>
+              
+              <div className="space-y-3">
+                <label className={`flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'cod' ? 'border-brand-primary bg-brand-primary/5' : 'border-border-light'}`}>
+                  <div className="flex items-center gap-4">
+                    <input type="radio" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="accent-brand-primary w-4 h-4" />
+                    <div>
+                      <p className="font-semibold text-text-primary">Thanh toán khi nhận hàng (COD)</p>
+                      <p className="text-xs text-text-secondary italic">Trả tiền mặt khi giao hàng thành công.</p>
+                    </div>
                   </div>
-                </div>
-                <img src="https://cdn-icons-png.flaticon.com/512/6491/6491490.png" className="w-8 h-8 opacity-70" alt="cod" />
-              </label>
+                  <img src="https://cdn-icons-png.flaticon.com/512/6491/6491490.png" className="w-8 h-8 opacity-70" alt="cod" />
+                </label>
+
+                <label className={`flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'vnpay' ? 'border-brand-primary bg-brand-primary/5' : 'border-border-light'}`}>
+                  <div className="flex items-center gap-4">
+                    <input type="radio" checked={paymentMethod === 'vnpay'} onChange={() => setPaymentMethod('vnpay')} className="accent-brand-primary w-4 h-4" />
+                    <div>
+                      <p className="font-semibold text-text-primary">Thanh toán qua VNPay</p>
+                      <p className="text-xs text-text-secondary italic">Thanh toán qua ứng dụng ngân hàng, thẻ ATM, Visa/MasterCard.</p>
+                    </div>
+                  </div>
+                  <img src="https://vnpay.vn/wp-content/uploads/2020/07/Logo-VNPAY-QR.png" className="h-6 object-contain" alt="vnpay" />
+                </label>
+              </div>
             </section>
           </div>
 
@@ -259,7 +271,7 @@ const Checkout = () => {
               <div className="mt-6 space-y-3">
                 <div className="flex gap-2">
                   <input type="text" placeholder="Mã giảm giá" value={voucherCode} onChange={(e) => setVoucherCode(e.target.value.toUpperCase())} className={`flex-1 px-3 py-2 border rounded-lg outline-none uppercase text-sm ${voucherError ? 'border-red-500' : 'focus:border-brand-primary'}`} />
-                  <button onClick={handleApplyVoucher} className="bg-brand-primary text-white px-2 py-4 rounded-lg text-sm font-bold">Áp dụng</button>
+                  <button onClick={handleApplyVoucher} className="bg-brand-primary text-white px-3 py-2 rounded-lg text-sm font-bold">Áp dụng</button>
                 </div>
                 {voucherError && <p className="text-red-500 text-[11px] italic">{voucherError}</p>}
                 {appliedVoucher && (
@@ -270,8 +282,12 @@ const Checkout = () => {
                 )}
               </div>
 
-              <button onClick={handleSubmit} disabled={loading || cartItems.length === 0} className="w-full mt-8 bg-accent-primary hover:bg-accent-hover disabled:bg-gray-400 text-white font-bold py-4 rounded-xl transition-all shadow-md active:scale-95 uppercase">
-                {loading ? 'Đang xử lý...' : 'Xác nhận thanh toán'}
+              <button 
+                onClick={handleSubmit} 
+                disabled={loading || cartItems.length === 0} 
+                className="w-full mt-8 bg-accent-primary hover:bg-accent-hover disabled:bg-gray-400 text-white font-bold py-4 rounded-xl transition-all shadow-md active:scale-95 uppercase"
+              >
+                {loading ? 'Đang xử lý...' : (paymentMethod === 'vnpay' ? 'Thanh toán VNPay' : 'Xác nhận đặt hàng')}
               </button>
 
               <div className="mt-4 flex items-center justify-center gap-2 text-xs text-state-success font-medium">
