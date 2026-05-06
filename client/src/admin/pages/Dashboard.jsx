@@ -23,8 +23,9 @@ const Dashboard = () => {
         statusChart: []
     });
 
+    // const IMAGE_BASE_URL = 'http://localhost:5000/uploads/products/';
     const IMAGE_BASE_URL = 'http://api.lumibook.click/uploads/products/';
-    const DEFAULT_IMAGE = 'https://placehold.co/150';
+    const DEFAULT_IMAGE = 'https://via.placeholder.com/150';
 
     const formatCurrency = (value) => {
         return new Intl.NumberFormat('vi-VN', {

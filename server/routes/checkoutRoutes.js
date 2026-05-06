@@ -3,6 +3,9 @@ const router = express.Router();
 const checkoutController = require('../controllers/checkoutController');
 const { protect } = require('../middlewares/auth');
 
+router.get('/vnpay-ipn', checkoutController.vnpayIpn);
+
+
 router.use(protect); 
 
 router.post('/place-order', checkoutController.createOrder);

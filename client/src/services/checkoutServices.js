@@ -15,7 +15,10 @@ const checkoutService = {
 
     getOrderDetail: (id) => {
         return axiosClient.get(`/checkout/my-orders/${id}`);
-    }
+    },
+    verifyVnpayPayment: (queryParams) => {
+    return axiosClient.get(`/checkout/vnpay-return${queryParams}`);
+}
 };
 
 export default checkoutService;
