@@ -136,7 +136,6 @@ exports.getDashboardStats = async (req, res) => {
             dateCondition = " AND DATE(ngay_dat) BETWEEN ? AND ?";
             params = [startDate, endDate];
         }
-
         const [revenueChart] = await pool.execute(`
             SELECT DATE_FORMAT(ngay_dat, '%d/%m') as date, SUM(tong_tien) as revenue
             FROM don_hang
@@ -144,12 +143,14 @@ exports.getDashboardStats = async (req, res) => {
             GROUP BY date  -- Nhóm theo alias 'date' đã format
             ORDER BY MIN(ngay_dat) ASC LIMIT 15
         `, params);
-
+        const [revenueRes] = await pool.execute(`
+            SELECT SUM(tong_tien) as total FROM don_hang 
+            WHERE trang_thai = 'da_giao' ${dateCondition}
+        `, params);
         const [newOrdersRes] = await pool.execute(`
             SELECT COUNT(id) as total FROM don_hang 
             WHERE trang_thai = 'cho_duyet' ${dateCondition}
         `, params);
-
         const [usersRes] = await pool.execute(`SELECT COUNT(id) as total FROM nguoi_dung WHERE role = 'customer'`);
         const [booksRes] = await pool.execute(`SELECT COUNT(id) as total FROM sach`)
         const [statusChart] = await pool.execute(`
