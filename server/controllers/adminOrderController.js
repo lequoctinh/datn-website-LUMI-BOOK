@@ -137,9 +137,12 @@ exports.getDashboardStats = async (req, res) => {
             params = [startDate, endDate];
         }
 
-        const [revenueRes] = await pool.execute(`
-            SELECT SUM(tong_tien) as total FROM don_hang 
+        const [revenueChart] = await pool.execute(`
+            SELECT DATE_FORMAT(ngay_dat, '%d/%m') as date, SUM(tong_tien) as revenue
+            FROM don_hang
             WHERE trang_thai = 'da_giao' ${dateCondition}
+            GROUP BY date  -- Nhóm theo alias 'date' đã format
+            ORDER BY MIN(ngay_dat) ASC LIMIT 15
         `, params);
 
         const [newOrdersRes] = await pool.execute(`
@@ -219,7 +222,10 @@ exports.getChartData = async (req, res) => {
 
 const formatImagePath = (filename) => {
     if (!filename) return null;
-    return `http://localhost:5000/uploads/products/${filename}`; 
+    const baseUrl = process.env.NODE_ENV === 'production' 
+        ? 'http://api.lumibook.click' 
+        : 'http://localhost:5000';
+    return `${baseUrl}/uploads/products/${filename}`; 
 };
 
 exports.getLowStockBooks = async (req, res) => {

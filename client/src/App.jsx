@@ -30,7 +30,7 @@ import LanguageBooks from './pages/ProductsCategory/LanguageBooks';
 import LiteraryBooks from './pages/ProductsCategory/LiteraryBooks';
 import MentalityBooks from './pages/ProductsCategory/MentalityBooks';
 
-import { CartProvider } from './context/cartContext';
+import { CartProvider } from './context/CartContext';
 
 import Dashboard from './admin/pages/Dashboard';
 import BookManager from './admin/pages/BookManager';
@@ -109,3 +109,6 @@ function App() {
 }
 
 export default App;
+
+
+
