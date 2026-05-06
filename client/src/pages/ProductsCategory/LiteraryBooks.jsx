@@ -35,7 +35,8 @@ function LiteraryBooks() {
         price_range: '',
         sort_by: 'newest'
     });
-
+const IMAGE_BASE_URL = 'http://localhost:5000/uploads/products/';
+const DEFAULT_IMAGE = 'https://via.placeholder.com/150';
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -240,9 +241,14 @@ function LiteraryBooks() {
                                     >
                                         <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 bg-gray-50">
                                             <img 
-                                                src={book.hinh_anh} 
+                                                src={book.hinh_anh ? `${IMAGE_BASE_URL}${book.hinh_anh}` : DEFAULT_IMAGE} 
                                                 alt={book.ten_sach} 
-                                                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" 
+                                                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                                                loading="lazy"
+                                                onError={(e) => { 
+                                                    e.target.onerror = null; 
+                                                    e.target.src = DEFAULT_IMAGE; 
+                                                }} 
                                             />
                                             
                                             {/* Action Buttons Overlay */}

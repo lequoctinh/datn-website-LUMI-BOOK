@@ -8,14 +8,14 @@ const deleteFile = async (fileName) => {
         const filePath = path.join(__dirname, '../uploads/products/', fileName);
         await fs.unlink(filePath);
     } catch (err) {
-        console.error("Không thể xóa file cũ:", err.message);
+        console.error("Error:", err.message);
     }
 };
 
 exports.getBooksAdmin = async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.max(1, parseInt(req.query.limit) || 10);
         const offset = (page - 1) * limit;
         const search = req.query.search || '';
 
@@ -35,21 +35,17 @@ exports.getBooksAdmin = async (req, res) => {
         }
 
         query += ` ORDER BY s.created_at DESC LIMIT ? OFFSET ?`;
-        queryParams.push(limit, offset);
-
-        const [rows] = await pool.query(query, queryParams);
+        const [rows] = await pool.query(query, [...queryParams, limit, offset]);
         const [countResult] = await pool.query(countQuery, search ? [`%${search}%`] : []);
         
-        const total = countResult[0].total;
-
         res.json({
             success: true,
             data: rows,
             pagination: {
-                total,
+                total: countResult[0].total,
                 page,
                 limit,
-                totalPages: Math.ceil(total / limit)
+                totalPages: Math.ceil(countResult[0].total / limit)
             }
         });
     } catch (error) {
@@ -68,7 +64,7 @@ exports.getBookById = async (req, res) => {
             [bookId]
         );
 
-        if (bookRows.length === 0) return res.status(404).json({ message: 'Không tìm thấy sách' });
+        if (bookRows.length === 0) return res.status(404).json({ message: 'Không tìm thấy' });
         const book = bookRows[0];
 
         const [categories] = await pool.execute(
@@ -91,9 +87,15 @@ exports.getBookById = async (req, res) => {
 };
 
 exports.createBook = async (req, res) => {
-    const connection = await pool.getConnection(); 
+    const connection = await pool.getConnection();
     try {
         const data = req.body;
+        const gia_ban = Number(data.gia_ban) || 0;
+        let gia_giam = Number(data.gia_giam) || 0;
+
+        if (gia_ban <= 0) throw new Error("Giá bán phải lớn hơn 0");
+        if (gia_giam >= gia_ban) gia_giam = 0;
+
         const hinh_anh = req.files['hinh_anh'] ? req.files['hinh_anh'][0].filename : null;
         const album_anh = req.files['album_anh'] ? req.files['album_anh'].map(f => f.filename) : [];
 
@@ -107,12 +109,13 @@ exports.createBook = async (req, res) => {
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 data.ten_sach, data.nha_cung_cap || null, data.nguoi_dich || null, data.nxb_id || null, 
-                data.nam_xuat_ban || null, data.ngon_ngu || 'Tiếng Việt', data.gia_ban || 0, 
-                data.gia_giam || 0, data.so_luong_ton || 0, data.so_trang || null, 
+                data.nam_xuat_ban || null, data.ngon_ngu || 'Tiếng Việt', gia_ban, 
+                gia_giam, Number(data.so_luong_ton) || 0, data.so_trang || null, 
                 data.kich_thuoc || null, data.hinh_thuc || null, data.mo_ta || null, 
                 data.noi_dung || null, hinh_anh, JSON.stringify(album_anh), data.trang_thai || 'hien_thi'
             ]
         );
+
         const newBookId = bookResult.insertId;
         const dmIds = JSON.parse(data.danh_muc_ids || '[]');
         if (dmIds.length > 0) {
@@ -127,10 +130,10 @@ exports.createBook = async (req, res) => {
         }
 
         await connection.commit();
-        res.status(201).json({ success: true, message: 'Thêm sách thành công!', id: newBookId });
+        res.status(201).json({ success: true, message: 'Thành công', id: newBookId });
     } catch (error) {
         await connection.rollback();
-        res.status(500).json({ message: error.message });
+        res.status(400).json({ message: error.message });
     } finally {
         connection.release();
     }
@@ -141,12 +144,17 @@ exports.updateBook = async (req, res) => {
     try {
         const bookId = req.params.id;
         const data = req.body;
+        const [oldBook] = await connection.execute('SELECT hinh_anh, album_anh FROM sach WHERE id = ?', [bookId]);
+        if (oldBook.length === 0) throw new Error("Không tồn tại");
 
-        const [oldBook] = await pool.execute('SELECT hinh_anh, album_anh FROM sach WHERE id = ?', [bookId]);
-        if (oldBook.length === 0) throw new Error("Sách không tồn tại");
+        const gia_ban = Number(data.gia_ban) || 0;
+        let gia_giam = Number(data.gia_giam) || 0;
+        if (gia_ban <= 0) throw new Error("Giá bán phải lớn hơn 0");
+        if (gia_giam >= gia_ban) gia_giam = 0;
 
         let hinh_anh = oldBook[0].hinh_anh;
         let album_anh = JSON.parse(oldBook[0].album_anh || '[]');
+
         if (req.files['hinh_anh']) {
             await deleteFile(hinh_anh); 
             hinh_anh = req.files['hinh_anh'][0].filename;
@@ -166,8 +174,8 @@ exports.updateBook = async (req, res) => {
             WHERE id = ?`,
             [
                 data.ten_sach, data.nha_cung_cap || null, data.nguoi_dich || null, data.nxb_id || null, 
-                data.nam_xuat_ban || null, data.ngon_ngu || 'Tiếng Việt', data.gia_ban || 0, 
-                data.gia_giam || 0, data.so_luong_ton || 0, data.so_trang || null, 
+                data.nam_xuat_ban || null, data.ngon_ngu || 'Tiếng Việt', gia_ban, 
+                gia_giam, Number(data.so_luong_ton) || 0, data.so_trang || null, 
                 data.kich_thuoc || null, data.hinh_thuc || null, data.mo_ta || null, 
                 data.noi_dung || null, hinh_anh, JSON.stringify(album_anh), data.trang_thai, bookId
             ]
@@ -188,31 +196,27 @@ exports.updateBook = async (req, res) => {
         }
 
         await connection.commit();
-        res.json({ success: true, message: 'Cập nhật thành công!' });
+        res.json({ success: true, message: 'Thành công' });
     } catch (error) {
         await connection.rollback();
-        res.status(500).json({ message: error.message });
+        res.status(400).json({ message: error.message });
     } finally {
         connection.release();
     }
 };
+
 exports.toggleStatusBook = async (req, res) => {
     try {
         const bookId = req.params.id;
         const { trang_thai } = req.body; 
-
-        if (!['hien_thi', 'an'].includes(trang_thai)) {
-            return res.status(400).json({ message: 'Trạng thái không hợp lệ' });
-        }
-
+        if (!['hien_thi', 'an'].includes(trang_thai)) return res.status(400).json({ message: 'Lỗi' });
         await pool.execute('UPDATE sach SET trang_thai = ? WHERE id = ?', [trang_thai, bookId]);
-        res.json({ success: true, message: 'Đã thay đổi trạng thái' });
+        res.json({ success: true });
     } catch (error) {
         res.status(500).json({ message: 'Lỗi server' });
     }
 };
 
-// LẤY SÁCH BÁN CHẠY
 exports.getBestSellers = async (req, res) => {
     try {
         const query = `
@@ -228,56 +232,43 @@ exports.getBestSellers = async (req, res) => {
             ORDER BY total_sold DESC, s.created_at DESC
             LIMIT 8
         `;
-
         const [rows] = await pool.query(query);
         res.json({ success: true, data: rows });
     } catch (error) {
-        console.error("Lỗi getBestSellers:", error);
-        res.status(500).json({ message: 'Lỗi server khi lấy sách bán chạy' });
+        res.status(500).json({ message: 'Lỗi server' });
     }
 };
 
-// LẤY SÁCH MỚI PHÁT HÀNH
 exports.getNewArrivals = async (req, res) => {
     try {
         const query = `
             SELECT 
                 s.id, s.ten_sach, s.gia_ban, s.gia_giam, s.hinh_anh,
-                (SELECT tg.ten_tac_gia FROM sach_tac_gia stg 
-                JOIN tac_gia tg ON stg.tac_gia_id = tg.id 
-                WHERE stg.sach_id = s.id LIMIT 1) AS author,
+                (SELECT tg.ten_tac_gia FROM sach_tac_gia stg JOIN tac_gia tg ON stg.tac_gia_id = tg.id WHERE stg.sach_id = s.id LIMIT 1) AS author,
                 s.created_at
             FROM sach s
             WHERE s.trang_thai = 'hien_thi'
             ORDER BY s.created_at DESC
             LIMIT 8
         `;
-
         const [rows] = await pool.query(query);
-        
         const formattedData = rows.map(book => {
-            const discount = book.gia_giam > 0 
-                ? Math.round(((book.gia_ban - book.gia_giam) / book.gia_ban) * 100) 
-                : 0;
-            return { ...book, discount_percent: `-${discount}%` };
+            const hasDiscount = book.gia_giam > 0 && book.gia_giam < book.gia_ban;
+            const discount = hasDiscount ? Math.round(((book.gia_ban - book.gia_giam) / book.gia_ban) * 100) : 0;
+            return { ...book, discount_percent: hasDiscount ? `-${discount}%` : '0%' };
         });
-
         res.json({ success: true, data: formattedData });
     } catch (error) {
-        console.error("Lỗi getNewArrivals:", error);
-        res.status(500).json({ message: 'Lỗi server khi lấy sách mới' });
+        res.status(500).json({ message: 'Lỗi server' });
     }
 };
+
 exports.getAllBooks = async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 12;
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.max(1, parseInt(req.query.limit) || 12);
         const offset = (page - 1) * limit;
-        
-        const search = req.query.search || '';
-        const categoryId = req.query.category_id || 'all';
-        const priceRange = req.query.price_range || '';
-        const sortBy = req.query.sort_by || 'newest';
+        const { search, category_id, price_range, sort_by } = req.query;
 
         let whereClauses = ["s.trang_thai = 'hien_thi'"];
         let queryParams = [];
@@ -287,36 +278,23 @@ exports.getAllBooks = async (req, res) => {
             queryParams.push(`%${search}%`);
         }
 
-        if (categoryId && categoryId !== 'all') {
+        if (category_id && category_id !== 'all') {
             whereClauses.push("sdm.danh_muc_id = ?");
-            queryParams.push(categoryId);
+            queryParams.push(category_id);
         }
 
-        if (priceRange) {
-            if (priceRange === 'under-100') {
-                whereClauses.push("(CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) < 100000");
-            } else if (priceRange === '100-300') {
-                whereClauses.push("(CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) BETWEEN 100000 AND 300000");
-            } else if (priceRange === 'above-300') {
-                whereClauses.push("(CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) > 300000");
-            }
-        }
+        const effectivePrice = "(CASE WHEN s.gia_giam > 0 AND s.gia_giam < s.gia_ban THEN s.gia_giam ELSE s.gia_ban END)";
+        
+        if (price_range === 'under-100') whereClauses.push(`${effectivePrice} < 100000`);
+        else if (price_range === '100-300') whereClauses.push(`${effectivePrice} BETWEEN 100000 AND 300000`);
+        else if (price_range === 'above-300') whereClauses.push(`${effectivePrice} > 300000`);
 
-        const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : "";
+        const whereSql = `WHERE ${whereClauses.join(' AND ')}`;
 
-        const countQuery = `
-            SELECT COUNT(DISTINCT s.id) as total 
-            FROM sach s 
-            LEFT JOIN sach_danh_muc sdm ON s.id = sdm.sach_id 
-            ${whereSql}
-        `;
-        let orderSql = "";
-        switch (sortBy) {
-            case 'price-asc': orderSql = "ORDER BY (CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) ASC"; break;
-            case 'price-desc': orderSql = "ORDER BY (CASE WHEN s.gia_giam > 0 THEN s.gia_giam ELSE s.gia_ban END) DESC"; break;
-            case 'best-seller': orderSql = "ORDER BY (SELECT IFNULL(SUM(so_luong),0) FROM don_hang_chi_tiet WHERE sach_id = s.id) DESC"; break;
-            default: orderSql = "ORDER BY s.created_at DESC";
-        }
+        let orderSql = "ORDER BY s.created_at DESC";
+        if (sort_by === 'price-asc') orderSql = `ORDER BY ${effectivePrice} ASC`;
+        else if (sort_by === 'price-desc') orderSql = `ORDER BY ${effectivePrice} DESC`;
+        else if (sort_by === 'best-seller') orderSql = `ORDER BY (SELECT IFNULL(SUM(so_luong),0) FROM don_hang_chi_tiet WHERE sach_id = s.id) DESC`;
 
         const dataQuery = `
             SELECT DISTINCT s.id, s.ten_sach, s.gia_ban, s.gia_giam, s.hinh_anh,
@@ -327,22 +305,28 @@ exports.getAllBooks = async (req, res) => {
             ${orderSql}
             LIMIT ? OFFSET ?
         `;
+
+        const countQuery = `
+            SELECT COUNT(DISTINCT s.id) as total 
+            FROM sach s 
+            LEFT JOIN sach_danh_muc sdm ON s.id = sdm.sach_id 
+            ${whereSql}
+        `;
+
+        const [rows] = await pool.query(dataQuery, [...queryParams, limit, offset]);
         const [countResult] = await pool.query(countQuery, queryParams);
-        const total = countResult[0].total;
-        const [rows] = await pool.query(dataQuery, [...queryParams, Number(limit), Number(offset)]);
 
         res.json({
             success: true,
             data: rows,
             pagination: {
-                total,
+                total: countResult[0].total,
                 page,
                 limit,
-                totalPages: Math.ceil(total / limit)
+                totalPages: Math.ceil(countResult[0].total / limit)
             }
         });
     } catch (error) {
-        console.error("Lỗi SQL chi tiết:", error);
         res.status(500).json({ success: false, message: 'Lỗi server' });
     }
 };

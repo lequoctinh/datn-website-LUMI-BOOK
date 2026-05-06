@@ -5,7 +5,7 @@ import {
     faStar, faCartPlus, faTruck, faShield, faRotateLeft, 
     faPlus, faMinus, faTags, faLanguage, faBookOpen, 
     faRulerCombined, faBookAtlas, faCalendarAlt, faStore, 
-    faChevronRight, faChevronLeft 
+    faChevronRight, faChevronLeft, faSpinner
 } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
 import bookService from '../../services/bookService';
@@ -14,7 +14,7 @@ import { useCart } from '../../context/cartContext';
 
 const IMAGE_BASE_URL = 'http://localhost:5000/uploads/products/';
     
-function ProductDetail() {
+const ProductDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [isAdding, setIsAdding] = useState(false);
@@ -107,14 +107,24 @@ function ProductDetail() {
 
     if (!book) return null;
 
-    const isDiscounted = book.gia_giam > 0 && book.gia_giam < book.gia_ban;
-    const currentPrice = isDiscounted ? book.gia_giam : book.gia_ban;
-    const percentDiscount = isDiscounted ? Math.round(((book.gia_ban - book.gia_giam) / book.gia_ban) * 100) : 0;
+    const giaGoc = Number(book.gia_ban) || 0;
+    const giaGiam = Number(book.gia_giam) || 0;
+    const isDiscounted = giaGiam > 0 && giaGiam < giaGoc;
+    const currentPrice = isDiscounted ? giaGiam : giaGoc;
+    const percentDiscount = isDiscounted ? Math.round(((giaGoc - giaGiam) / giaGoc) * 100) : 0;
+    
     const MAX_THUMBNAILS = 5;
     const visibleThumbnails = allImages.slice(0, MAX_THUMBNAILS);
     const overflowCount = allImages.length - MAX_THUMBNAILS;
     const authors = book.tac_gia?.map(t => t.ten_tac_gia).join(', ') || 'Đang cập nhật';
     const categories = book.danh_muc?.map(c => c.ten_danh_muc).join(', ') || 'Đang cập nhật';
+
+    const formatPrice = (price) => {
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+        }).format(price).replace('₫', 'đ');
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
@@ -187,7 +197,7 @@ function ProductDetail() {
                                         <FontAwesomeIcon 
                                             key={i} 
                                             icon={faStar} 
-                                            className={i < Math.round(reviewStats.average || 0) ? "text-yellow-400" : (reviewStats.total > 0 ? "text-gray-300" : "text-gray-300")} 
+                                            className={i < Math.round(reviewStats.average || 0) ? "text-yellow-400" : "text-gray-300"} 
                                         />
                                     ))}
                                     <span className="text-gray-500 font-medium ml-1">
@@ -199,9 +209,9 @@ function ProductDetail() {
 
                         <div className="bg-gray-50/80 rounded-2xl p-6 mb-8 border border-gray-100">
                             <div className="flex flex-wrap items-end gap-4">
-                                <span className="text-4xl font-black text-red-600 tracking-tight">{Number(currentPrice).toLocaleString('vi-VN')} đ</span>
+                                <span className="text-4xl font-black text-red-600 tracking-tight">{formatPrice(currentPrice)}</span>
                                 {isDiscounted && (
-                                    <span className="text-lg font-bold text-gray-400 line-through mb-1.5">{Number(book.gia_ban).toLocaleString('vi-VN')} đ</span>
+                                    <span className="text-lg font-bold text-gray-400 line-through mb-1.5">{formatPrice(giaGoc)}</span>
                                 )}
                             </div>
                         </div>
@@ -358,24 +368,27 @@ function ProductDetail() {
                         
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                             {relatedBooks.map((relBook) => {
-                                const relDiscounted = relBook.gia_giam > 0 && relBook.gia_giam < relBook.gia_ban;
-                                const relPrice = relDiscounted ? relBook.gia_giam : relBook.gia_ban;
-                                const relPercent = relDiscounted ? Math.round(((relBook.gia_ban - relBook.gia_giam) / relBook.gia_ban) * 100) : 0;
+                                const relGiaGoc = Number(relBook.gia_ban) || 0;
+                                const relGiaGiam = Number(relBook.gia_giam) || 0;
+                                const relDiscounted = relGiaGiam > 0 && relGiaGiam < relGiaGoc;
+                                const relPrice = relDiscounted ? relGiaGiam : relGiaGoc;
+                                const relPercent = relDiscounted ? Math.round(((relGiaGoc - relGiaGiam) / relGiaGoc) * 100) : 0;
+                                
                                 return (
                                     <Link to={`/product/${relBook.id}`} key={relBook.id} className="group flex flex-col gap-3">
                                         <div className="aspect-[3/4] rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden relative">
                                             {relDiscounted && <div className="absolute top-2 right-2 bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-full z-10">-{relPercent}%</div>}
                                             <img 
-                                                src={relBook.hinh_anh ? `${IMAGE_BASE_URL}${relBook.hinh_anh}` : 'https://via.placeholder.com/300x400'} 
+                                                src={relBook.hinh_anh ? (relBook.hinh_anh.startsWith('http') ? relBook.hinh_anh : `${IMAGE_BASE_URL}${relBook.hinh_anh}`) : 'https://via.placeholder.com/300x400'} 
                                                 alt={relBook.ten_sach} 
                                                 className="w-full h-full object-contain mix-blend-multiply p-4 group-hover:scale-110 transition-transform duration-500" 
                                             />
                                         </div>
                                         <div className="flex flex-col">
                                             <h3 className="font-bold text-gray-800 line-clamp-2 text-sm group-hover:text-brand-primary transition-colors min-h-[40px]">{relBook.ten_sach}</h3>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <span className="font-black text-red-600">{Number(relPrice).toLocaleString('vi-VN')} đ</span>
-                                                {relDiscounted && <span className="text-xs text-gray-400 line-through">{Number(relBook.gia_ban).toLocaleString('vi-VN')} đ</span>}
+                                            <div className="flex flex-col mt-1">
+                                                <span className="font-black text-red-600">{formatPrice(relPrice)}</span>
+                                                {relDiscounted && <span className="text-xs text-gray-400 line-through">{formatPrice(relGiaGoc)}</span>}
                                             </div>  
                                         </div>
                                     </Link>
@@ -387,6 +400,6 @@ function ProductDetail() {
             </div>
         </div>
     );
-}
+};
 
 export default ProductDetail;

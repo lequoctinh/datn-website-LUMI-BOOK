@@ -11,7 +11,6 @@ const NewArrivals = () => {
     const [books, setBooks] = useState([]);
     const [loading, setLoading] = useState(true);
 
-
     useEffect(() => {
         const fetchNewBooks = async () => {
             try {
@@ -30,19 +29,18 @@ const NewArrivals = () => {
 
     const handleAddToCart = async (e, book) => {
         e.stopPropagation();
-        
         if (book.so_luong_ton <= 0) return;
     
         setAddingId(book.id);
         try {
-          await addToCart(book.id, 1);
+        await addToCart(book.id, 1);
         } finally {
-          setTimeout(() => setAddingId(null), 500);
+        setTimeout(() => setAddingId(null), 500);
         }
-      };
+    };
 
     const formatPrice = (price) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+        return Number(price).toLocaleString('vi-VN') + 'đ';
     };
 
     if (loading) {
@@ -67,12 +65,22 @@ const NewArrivals = () => {
 
                 <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 gap-y-12 ln-perspective">
                     {books.map((book) =>{
+                        const giaGoc = Number(book.gia_ban) || 0;
+                        const giaGiam = Number(book.gia_giam) || 0;
+                        const isDiscounted = giaGiam > 0 && giaGiam < giaGoc;
+                        const percentDiscount = isDiscounted ? Math.round(((giaGoc - giaGiam) / giaGoc) * 100) : 0;
+                        const currentPrice = isDiscounted ? giaGiam : giaGoc;
                         const isItemAdding = addingId === book.id;
+
                         return (
                         <div key={book.id} className="ln-card rounded-2xl p-4 flex flex-col h-[480px]">
                             <div className="ln-ribbon-mark">
                                 <i className="fa-solid fa-star"></i>
                             </div>
+
+                            {isDiscounted && percentDiscount > 0 && (
+                                <div className="discount-tag">-{percentDiscount}%</div>
+                            )}
 
                             <div className="ln-book-stage mb-4" onClick={() => navigate(`/product/${book.id}`)}>
                                 <div className="ln-book-obj cursor-pointer">
@@ -81,6 +89,13 @@ const NewArrivals = () => {
                                     <div className="ln-cover">
                                         <div className="ln-lighting"></div>
                                             <img src={book.hinh_anh ? `http://localhost:5000/uploads/products/${book.hinh_anh}` : 'https://via.placeholder.com/300x400'} alt={book.ten_sach} />
+                                        {book.so_luong_ton <= 0 && (
+                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-30">
+                                            <span className="bg-white/90 text-red-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg">
+                                            Hết hàng
+                                            </span>
+                                        </div>
+                                        )}
                                         <div className="absolute inset-0 bg-gradient-to-tr from-brand-dark/10 to-transparent pointer-events-none"></div>
                                     </div>
                                 </div>
@@ -96,7 +111,9 @@ const NewArrivals = () => {
                                         {book.ten_sach}
                                     </h3>
                                     <p className="text-text-muted text-xs uppercase tracking-wide mt-1 font-body">
-                                        {book.author || 'Đang cập nhật'}
+                                        {book.tac_gia?.length > 0 
+                                            ? book.tac_gia.map(a => a.ten_tac_gia).join(', ') 
+                                            : 'Nhiều tác giả'}
                                     </p>
                                 </div>
 
@@ -104,20 +121,15 @@ const NewArrivals = () => {
 
                                 <div className="flex items-end justify-between">
                                     <div className="flex flex-col">
-                                        <div className="flex items-center gap-2">
-                                            {book.gia_giam < book.gia_ban && (
-                                                <>
-                                                    <span className="text-xs text-text-muted line-through decoration-red-400 decoration-1">
-                                                        {formatPrice(book.gia_ban)}
-                                                    </span>
-                                                    <span className="text-[10px] font-bold text-accent-primary bg-accent-primary/10 px-1.5 py-0.5 rounded">
-                                                        {book.discount_percent}
-                                                    </span>
-                                                </>
+                                        <div className="h-4 flex items-center">
+                                            {isDiscounted && (
+                                                <span className="text-xs text-text-muted line-through decoration-red-400 decoration-1">
+                                                    {formatPrice(giaGoc)}
+                                                </span>
                                             )}
                                         </div>
                                         <span className="font-heading text-xl font-bold text-accent-primary">
-                                            {formatPrice(book.gia_giam || book.gia_ban)}
+                                            {formatPrice(currentPrice)}
                                         </span>
                                     </div>
 
@@ -132,7 +144,7 @@ const NewArrivals = () => {
                             </div>
                         </div>
                         );
-                      })}
+                    })}
                 </div>
 
                 <div className="mt-16 text-center">

@@ -36,7 +36,8 @@ function EconomyBooks() {
         price_range: '',
         sort_by: 'newest'
     });
-
+const IMAGE_BASE_URL = 'http://localhost:5000/uploads/products/';
+const DEFAULT_IMAGE = 'https://via.placeholder.com/150';
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -224,15 +225,17 @@ function EconomyBooks() {
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
                                 {books.map((book) => (
                                     <div key={book.id} className="group bg-white rounded-3xl p-4 border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col h-full">
-                                        {/* Image Wrapper Optimized */}
                                         <div className="relative aspect-[3/4] rounded-2xl overflow-hidden mb-6 bg-[#F3F4F6] shadow-inner">
                                             <img 
-                                                src={book.hinh_anh} 
+                                                src={book.hinh_anh ? `${IMAGE_BASE_URL}${book.hinh_anh}` : DEFAULT_IMAGE} 
                                                 alt={book.ten_sach} 
-                                                className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:rotate-2" 
+                                                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                                                loading="lazy"
+                                                onError={(e) => { 
+                                                    e.target.onerror = null; 
+                                                    e.target.src = DEFAULT_IMAGE; 
+                                                }} 
                                             />
-                                            
-                                            {/* Overlay Actions */}
                                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-3">
                                                 <button 
                                                     onClick={(e) => handleAddToCart(e, book)}

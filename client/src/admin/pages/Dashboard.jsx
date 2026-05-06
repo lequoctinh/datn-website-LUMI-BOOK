@@ -23,6 +23,9 @@ const Dashboard = () => {
         statusChart: []
     });
 
+    const IMAGE_BASE_URL = 'http://localhost:5000/uploads/products/';
+    const DEFAULT_IMAGE = 'https://via.placeholder.com/150';
+
     const formatCurrency = (value) => {
         return new Intl.NumberFormat('vi-VN', {
             style: 'currency',
@@ -34,6 +37,12 @@ const Dashboard = () => {
         if (value >= 1000000) return `${(value / 1000000).toFixed(1)}tr`;
         if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
         return value;
+    };
+
+    const getImageUrl = (path) => {
+        if (!path) return DEFAULT_IMAGE;
+        if (path.startsWith('http')) return path;
+        return `${IMAGE_BASE_URL}${path}`;
     };
 
     const fetchData = async (start = filter.startDate, end = filter.endDate) => {
@@ -213,7 +222,12 @@ const Dashboard = () => {
                             <div key={item.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-2xl transition-all">
                                 <div className="flex items-center gap-3">
                                     <span className="text-lg font-black text-gray-200 w-6">0{i+1}</span>
-                                    <img src={item.hinh_anh} className="w-12 h-16 object-cover rounded-lg shadow-sm" alt="" />
+                                    <img 
+                                        src={getImageUrl(item.hinh_anh)} 
+                                        className="w-12 h-16 object-cover rounded-lg shadow-sm" 
+                                        alt={item.ten_sach} 
+                                        onError={(e) => { e.target.src = DEFAULT_IMAGE; }}
+                                    />
                                     <div>
                                         <p className="font-bold text-gray-700 text-sm line-clamp-1">{item.ten_sach}</p>
                                         <p className="text-xs text-blue-600 font-bold">{item.total_sold} đã bán</p>
@@ -233,7 +247,12 @@ const Dashboard = () => {
                         {topRated.map((item) => (
                             <div key={item.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-2xl transition-all">
                                 <div className="flex items-center gap-3">
-                                    <img src={item.hinh_anh} className="w-12 h-16 object-cover rounded-lg shadow-sm" alt="" />
+                                    <img 
+                                        src={getImageUrl(item.hinh_anh)} 
+                                        className="w-12 h-16 object-cover rounded-lg shadow-sm" 
+                                        alt={item.ten_sach} 
+                                        onError={(e) => { e.target.src = DEFAULT_IMAGE; }}  
+                                    />
                                     <div>
                                         <p className="font-bold text-gray-700 text-sm line-clamp-1">{item.ten_sach}</p>
                                         <div className="flex items-center gap-1 text-yellow-500 text-xs font-black">
@@ -264,7 +283,12 @@ const Dashboard = () => {
                             {lowStockBooks.map((book) => (
                                 <tr key={book.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
                                     <td className="py-4 flex items-center gap-3">
-                                        <img src={book.hinh_anh} className="w-10 h-14 object-cover rounded-lg shadow-sm" alt="" />
+                                        <img 
+                                            src={getImageUrl(book.hinh_anh)} 
+                                            className="w-10 h-14 object-cover rounded-lg shadow-sm" 
+                                            alt={book.ten_sach} 
+                                            onError={(e) => { e.target.src = DEFAULT_IMAGE; }}
+                                        />
                                         <span className="font-bold text-gray-700 text-sm">{book.ten_sach}</span>
                                     </td>
                                     <td className="py-4 text-center font-black text-red-500">{book.so_luong_ton}</td>

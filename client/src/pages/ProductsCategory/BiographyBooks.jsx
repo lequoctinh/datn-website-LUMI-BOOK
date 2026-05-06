@@ -35,7 +35,8 @@ function BiographyBooks() {
         price_range: '',
         sort_by: 'newest'
     });
-
+const IMAGE_BASE_URL = 'http://localhost:5000/uploads/products/';
+const DEFAULT_IMAGE = 'https://via.placeholder.com/150';
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -231,10 +232,14 @@ function BiographyBooks() {
                                     >
                                         <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 bg-gray-50 group-hover:shadow-md transition-all duration-500">
                                             <img 
-                                                src={book.hinh_anh} 
+                                                src={book.hinh_anh ? `${IMAGE_BASE_URL}${book.hinh_anh}` : DEFAULT_IMAGE} 
                                                 alt={book.ten_sach} 
                                                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                                                 loading="lazy"
+                                                onError={(e) => { 
+                                                    e.target.onerror = null; 
+                                                    e.target.src = DEFAULT_IMAGE; 
+                                                }} 
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
                                                 <button 

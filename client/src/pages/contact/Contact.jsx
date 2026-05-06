@@ -38,7 +38,7 @@ const Contact = () => {
                 </div>
                 <div>
                   <h4 className="font-bold text-sm uppercase tracking-wider opacity-70">Địa chỉ</h4>
-                  <p className="mt-1">FPT Polytechnic, Tòa nhà Innovation, TP. Hồ Chí Minh</p>
+                  <p className="mt-1">FPT Polytechnic, Tòa T, TP. Hồ Chí Minh</p>
                 </div>
               </div>
 
