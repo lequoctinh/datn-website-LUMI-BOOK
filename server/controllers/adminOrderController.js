@@ -151,16 +151,7 @@ exports.getDashboardStats = async (req, res) => {
         `, params);
 
         const [usersRes] = await pool.execute(`SELECT COUNT(id) as total FROM nguoi_dung WHERE role = 'customer'`);
-        const [booksRes] = await pool.execute(`SELECT COUNT(id) as total FROM sach`);
-
-        const [revenueChart] = await pool.execute(`
-            SELECT DATE_FORMAT(ngay_dat, '%d/%m') as date, SUM(tong_tien) as revenue
-            FROM don_hang
-            WHERE trang_thai = 'da_giao' ${dateCondition}
-            GROUP BY DATE(ngay_dat)
-            ORDER BY ngay_dat ASC LIMIT 15
-        `, params);
-
+        const [booksRes] = await pool.execute(`SELECT COUNT(id) as total FROM sach`)
         const [statusChart] = await pool.execute(`
             SELECT trang_thai as status, COUNT(*) as count
             FROM don_hang 
