@@ -140,9 +140,10 @@ exports.getDashboardStats = async (req, res) => {
             SELECT DATE_FORMAT(ngay_dat, '%d/%m') as date, SUM(tong_tien) as revenue
             FROM don_hang
             WHERE trang_thai = 'da_giao' ${dateCondition}
-            GROUP BY date  -- Nhóm theo alias 'date' đã format
+            GROUP BY DATE_FORMAT(ngay_dat, '%d/%m')
             ORDER BY MIN(ngay_dat) ASC LIMIT 15
         `, params);
+        
         const [revenueRes] = await pool.execute(`
             SELECT SUM(tong_tien) as total FROM don_hang 
             WHERE trang_thai = 'da_giao' ${dateCondition}
