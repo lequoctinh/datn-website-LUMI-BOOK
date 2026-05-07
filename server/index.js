@@ -29,8 +29,15 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+// Middleware
 app.use(cors({
-    origin: ["http://lumibook.click", "http://www.lumibook.click"], 
+    origin: [
+        "http://lumibook.click", 
+        "https://lumibook.click",
+        "http://www.lumibook.click",
+        "https://www.lumibook.click",
+        "http://localhost:5173"  
+    ], 
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]

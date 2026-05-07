@@ -21,6 +21,7 @@ import Contact from './pages/contact/Contact';
 import OrderSuccess from './pages/order/OrderSuccess';
 // import OrderHistory from './pages/order/OrderHistory';
 import OrderDetail from './pages/order/OrderDetail';
+import VnpayReturn from './pages/order/VNPayReturn';
 import MyOrders from './pages/order/MyOrders';
 import UpdateOrder from './pages/order/UpdateOrder';
 import BiographyBooks from './pages/ProductsCategory/BiographyBooks';
@@ -85,6 +86,7 @@ function App() {
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/order-success" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
           <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+          <Route path="/order/vnpay_return" element={<ProtectedRoute><VnpayReturn /></ProtectedRoute>} />
           <Route path="/order-detail/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
           <Route path="/update-order/:id" element={<ProtectedRoute><UpdateOrder /></ProtectedRoute>} />
         </Route>

@@ -3,9 +3,14 @@ const { pool } = require('../config/db');
 exports.getAllOrders = async (req, res) => {
     try {
         const [rows] = await pool.execute(
-            `SELECT dh.*, nd.ho_ten, nd.email 
+            `SELECT 
+                dh.*, 
+                nd.ho_ten, 
+                nd.email,
+                mkm.ma_code as voucher_code -- Lấy thêm mã code
             FROM don_hang dh
             JOIN nguoi_dung nd ON dh.nguoi_dung_id = nd.id
+            LEFT JOIN ma_khuyen_mai mkm ON dh.ma_khuyen_mai_id = mkm.id 
             ORDER BY dh.ngay_dat DESC`
         );
         res.json({ success: true, data: rows });
@@ -101,7 +106,15 @@ exports.getOrderDetail = async (req, res) => {
     const { id } = req.params;
     try {
         const [order] = await pool.execute(
-            `SELECT dh.*, mkm.ma_code, mkm.gia_tri as voucher_value, mkm.loai_giam, nd.ho_ten, nd.email FROM don_hang dh JOIN nguoi_dung nd ON dh.nguoi_dung_id = nd.id
+            `SELECT 
+                dh.*, 
+                mkm.ma_code, 
+                mkm.gia_tri as voucher_value, 
+                mkm.loai_giam, 
+                nd.ho_ten, 
+                nd.email 
+            FROM don_hang dh 
+            JOIN nguoi_dung nd ON dh.nguoi_dung_id = nd.id
             LEFT JOIN ma_khuyen_mai mkm ON dh.ma_khuyen_mai_id = mkm.id 
             WHERE dh.id = ?`, 
             [id]
@@ -143,7 +156,7 @@ exports.getDashboardStats = async (req, res) => {
             GROUP BY DATE_FORMAT(ngay_dat, '%d/%m')
             ORDER BY MIN(ngay_dat) ASC LIMIT 15
         `, params);
-        
+
         const [revenueRes] = await pool.execute(`
             SELECT SUM(tong_tien) as total FROM don_hang 
             WHERE trang_thai = 'da_giao' ${dateCondition}

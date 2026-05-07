@@ -2,11 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
     faLayerGroup, faSearch, faClock, faCircleCheck, 
-    faTruckMoving, faBan, faChevronRight, faClose, faFilter
+    faTruckMoving, faBan, faChevronRight, faClose, faFilter, faCreditCard, faMoneyBill
 } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
 import adminOrderService from '../services/adminOrderService';
-// import orderService from '../services/orderService';
 
 function OrderManager() {
     const [orders, setOrders] = useState([]);
@@ -30,8 +29,10 @@ function OrderManager() {
     };
 
     useEffect(() => {
-        fetchOrders();
-    }, []);
+    fetchOrders();
+    const interval = setInterval(fetchOrders, 30000);
+    return () => clearInterval(interval);
+}, []);
 
     const fetchOrders = async () => {
         setLoading(true);
@@ -75,14 +76,12 @@ function OrderManager() {
             toast.warning("Vui lòng nhập lý do hủy");
             return;
         }
-
         setModalLoading(true);
         try {
             const res = await adminOrderService.updateStatus(selectedOrder.id, {
                 trang_thai: 'da_huy',
                 ly_do_huy: tempReason 
             });
-
             if (res?.success) {
                 toast.success("Đơn hàng đã được hủy");
                 setShowCancelModal(false);
@@ -126,10 +125,7 @@ function OrderManager() {
             const orderIdStr = o.id.toString();
             const referenceStr = `lb00${o.id}`.toLowerCase();
             const customerName = o.ho_ten_nguoi_nhan?.toLowerCase() || '';
-            
-            const matchText = customerName.includes(searchLower) || 
-                            orderIdStr.includes(searchLower) ||
-                            referenceStr.includes(searchLower);
+            const matchText = customerName.includes(searchLower) || orderIdStr.includes(searchLower) || referenceStr.includes(searchLower);
             const matchStatus = filterStatus === 'all' || o.trang_thai === filterStatus;
             return matchText && matchStatus;
         });
@@ -163,7 +159,6 @@ function OrderManager() {
                         </h1>
                         <p className="text-xs font-medium text-slate-500 mt-1 uppercase tracking-widest">LumiBook Management System</p>
                     </div>
-
                     <div className="flex flex-wrap items-center gap-3">
                         <div className="relative">
                             <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
@@ -187,12 +182,12 @@ function OrderManager() {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] font-black uppercase tracking-widest">
-                                <th className="px-6 py-4">Mã tham chiếu</th>
+                                <th className="px-6 py-4">Mã đơn</th>
                                 <th className="px-6 py-4">Khách hàng</th>
-                                <th className="px-6 py-4 text-center">Ngày lập</th>
-                                <th className="px-6 py-4 text-right">Giá trị đơn</th>
+                                <th className="px-6 py-4 text-center">Thanh toán</th>
+                                <th className="px-6 py-4 text-right">Tổng tiền</th>
                                 <th className="px-6 py-4 text-center">Trạng thái</th>
-                                <th className="px-6 py-4 text-center text-slate-400">Thao tác</th>
+                                <th className="px-6 py-4 text-center">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -202,13 +197,27 @@ function OrderManager() {
                                 <tr><td colSpan="6" className="py-20 text-center text-slate-400 text-sm font-medium">Không tìm thấy đơn hàng nào</td></tr>
                             ) : filteredOrders.map((order) => (
                                 <tr key={order.id} className="hover:bg-slate-50/50 transition-all cursor-pointer" onClick={() => handleViewDetail(order.id)}>
-                                    <td className="px-6 py-4 font-mono text-xs text-slate-400">LB00{order.id}</td>
+                                    <td className="px-6 py-4 font-mono text-xs text-slate-400">#LB{order.id}</td>
                                     <td className="px-6 py-4">
                                         <div className="text-sm font-bold text-slate-800">{order.ho_ten_nguoi_nhan}</div>
-                                        <div className="text-[11px] text-slate-500 font-medium tracking-wide">{order.sdt_nguoi_nhan}</div>
+                                        <div className="text-[10px] text-slate-400 font-medium">{new Date(order.ngay_dat).toLocaleDateString('vi-VN')}</div>
                                     </td>
-                                    <td className="px-6 py-4 text-center text-xs font-medium text-slate-500">{new Date(order.ngay_dat).toLocaleDateString('vi-VN')}</td>
-                                    <td className="px-6 py-4 text-right font-black text-sm text-slate-900">{Number(order.tong_tien).toLocaleString()}đ</td>
+                                    <td className="px-6 py-4 text-center">
+                                        <div className="flex flex-col items-center gap-1">
+                                            <span className={`text-[9px] font-black px-2 py-0.5 rounded border uppercase ${order.phuong_thuc_thanh_toan === 'vnpay' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-gray-50 text-gray-600 border-gray-100'}`}>
+                                                {order.phuong_thuc_thanh_toan === 'vnpay' ? 'VNPay' : 'COD'}
+                                            </span>
+                                            {order.phuong_thuc_thanh_toan === 'vnpay' && (
+                                                <span className={`text-[8px] font-bold ${order.trang_thai_thanh_toan === 'paid' ? 'text-emerald-500' : 'text-orange-500'}`}>
+                                                    {order.trang_thai_thanh_toan === 'paid' ? '● Đã trả' : '○ Chờ trả'}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <div className="text-sm font-black text-slate-900">{Number(order.tong_tien).toLocaleString()}đ</div>
+                                        {order.voucher_code && <div className="text-[9px] text-emerald-500 font-bold italic">Giảm giá: {order.voucher_code}</div>}
+                                    </td>
                                     <td className="px-6 py-4 text-center"><StatusBadge status={order.trang_thai} /></td>
                                     <td className="px-6 py-4 text-center"><FontAwesomeIcon icon={faChevronRight} className="text-slate-300 text-[10px]" /></td>
                                 </tr>
@@ -246,34 +255,49 @@ function OrderManager() {
                                         <div className="space-y-4">
                                             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2">Danh sách ấn phẩm</h4>
                                             {orderItems.map((item, idx) => (
-                                                <div key={idx} className="flex gap-4 p-2 hover:bg-slate-50 rounded transition-colors group">
+                                                <div key={idx} className="flex gap-4 p-2 hover:bg-slate-50 rounded transition-colors">
                                                     <div className="w-12 h-16 bg-slate-100 rounded overflow-hidden flex-shrink-0 border border-slate-200">
                                                         <img src={getImageUrl(item.hinh_anh)} className="w-full h-full object-cover" alt={item.ten_sach} />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-xs font-bold text-slate-800 truncate uppercase leading-tight">{item.ten_sach}</p>
-                                                        <p className="text-[10px] text-slate-500 font-medium mt-1 uppercase italic tracking-tighter">Số lượng: {item.so_luong} x {Number(item.gia_luc_mua).toLocaleString()}đ</p>
+                                                        <p className="text-[10px] text-slate-500 font-medium mt-1 uppercase italic">Số lượng: {item.so_luong} x {Number(item.gia_luc_mua).toLocaleString()}đ</p>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="bg-slate-50 p-6 rounded border border-slate-200">
-                                        <div className="flex justify-between items-center mb-4">
-                                            <span className="text-xs font-bold text-slate-500 uppercase">Trạng thái hiện tại</span>
-                                            <StatusBadge status={selectedOrder.trang_thai} />
-                                        </div>
-                                        {selectedOrder.trang_thai === 'da_huy' && selectedOrder.ly_do_huy && (
-                                            <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg">
-                                                <p className="text-[10px] text-red-600 font-black uppercase tracking-widest mb-1">Lý do hủy đơn:</p>
-                                                <p className="text-xs text-red-700 font-medium italic leading-relaxed">"{selectedOrder.ly_do_huy}"</p>
+
+                                    <div className="bg-slate-50 p-6 rounded border border-slate-200 space-y-4">
+                                        {selectedOrder.ma_code && (
+                                            <div className="flex justify-between items-start pb-4 border-b border-dashed border-slate-200">
+                                                <div>
+                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Voucher đã dùng</span>
+                                                    <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 uppercase">{selectedOrder.ma_code}</span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Giá trị giảm</span>
+                                                    <span className="text-xs font-bold text-red-500">-{selectedOrder.loai_giam === 'phan_tram' ? `${selectedOrder.voucher_value}%` : `${Number(selectedOrder.voucher_value).toLocaleString()}đ`}</span>
+                                                </div>
                                             </div>
                                         )}
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[10px] font-black text-slate-500 uppercase">Thanh toán qua</span>
+                                            <div className="flex items-center gap-2 font-bold text-slate-700 text-xs uppercase">
+                                                <FontAwesomeIcon icon={selectedOrder.phuong_thuc_thanh_toan === 'vnpay' ? faCreditCard : faMoneyBill} className="text-slate-400" />
+                                                {selectedOrder.phuong_thuc_thanh_toan === 'vnpay' ? 'Ví điện tử VNPay' : 'Tiền mặt (COD)'}
+                                            </div>
+                                        </div>
                                         <div className="flex justify-between items-center border-t border-slate-200 pt-4">
                                             <span className="text-xs font-black text-slate-900 uppercase">Tổng thanh toán</span>
                                             <span className="text-xl font-mono font-black text-slate-900">{Number(selectedOrder.tong_tien).toLocaleString()}đ</span>
                                         </div>
-                                    </div>
+                                        {selectedOrder.phuong_thuc_thanh_toan === 'vnpay' && selectedOrder.trang_thai_thanh_toan !== 'paid' && (
+                                            <div className="p-3 bg-orange-50 border border-orange-100 rounded text-center">
+                                                <p className="text-[10px] text-orange-600 font-black uppercase italic">⚠️ Khách hàng chưa hoàn tất thanh toán Online</p>
+                                            </div>
+                                        )}
+                                        </div>
                                 </>
                             )}
                         </div>
@@ -293,7 +317,7 @@ function OrderManager() {
                                     <button onClick={() => handleUpdateStatus(selectedOrder.id, 'da_huy')} className="px-4 py-3.5 border border-red-200 text-red-500 text-[10px] font-black uppercase rounded hover:bg-red-50 transition-all">Hủy đơn</button>
                                 )}
                             </div>
-                            <button onClick={() => setShowModal(false)} className="w-full py-3 border border-slate-200 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded hover:bg-slate-50 transition-all">Đóng cửa sổ</button>
+                            <button onClick={() => setShowModal(false)} className="w-full py-3 border border-slate-200 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded">Đóng cửa sổ</button>
                         </div>
                     </div>
                 </div>
@@ -305,13 +329,10 @@ function OrderManager() {
                     <div className="relative bg-white w-full max-w-md rounded-xl shadow-2xl p-6">
                         <h3 className="text-lg font-black text-slate-900 uppercase mb-4">Xác nhận hủy đơn hàng</h3>
                         <div className="space-y-4">
-                            <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Lý do hủy đơn</label>
-                                <textarea className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-red-500 outline-none transition-all" rows="4" value={tempReason} onChange={(e) => setTempReason(e.target.value)} placeholder="Nhập lý do để gửi thông báo cho khách hàng..."></textarea>
-                            </div>
+                            <textarea className="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-red-500" rows="4" value={tempReason} onChange={(e) => setTempReason(e.target.value)} placeholder="Nhập lý do hủy đơn..."></textarea>
                             <div className="flex gap-3">
                                 <button onClick={() => setShowCancelModal(false)} className="flex-1 py-3 text-xs font-bold text-slate-500 bg-slate-100 rounded-lg">Quay lại</button>
-                                <button onClick={confirmCancelOrder} className="flex-[2] py-3 text-xs font-black text-white bg-red-500 rounded-lg hover:bg-red-600 shadow-lg shadow-red-200 uppercase">Xác nhận hủy đơn</button>
+                                <button onClick={confirmCancelOrder} className="flex-[2] py-3 text-xs font-black text-white bg-red-500 rounded-lg uppercase shadow-lg">Xác nhận hủy</button>
                             </div>
                         </div>
                     </div>

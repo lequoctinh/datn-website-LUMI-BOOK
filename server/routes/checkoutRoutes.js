@@ -4,6 +4,7 @@ const checkoutController = require('../controllers/checkoutController');
 const { protect } = require('../middlewares/auth');
 
 router.get('/vnpay-ipn', checkoutController.vnpayIpn);
+router.get('/vnpay-return', checkoutController.vnpayReturn);
 
 
 router.use(protect); 
